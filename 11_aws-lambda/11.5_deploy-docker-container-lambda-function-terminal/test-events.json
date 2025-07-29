@@ -1,0 +1,10 @@
+{
+  "sales_test": {
+    "data_type": "sales",
+    "output_bucket": "your-analytics-demo-bucket"
+  },
+  "inventory_test": {
+    "data_type": "inventory", 
+    "output_bucket": "your-analytics-demo-bucket"
+  }
+}

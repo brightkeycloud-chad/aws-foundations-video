@@ -1,0 +1,20 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and modify as needed
+
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Project Configuration
+project_name = "vpc-peering-demo"
+environment  = "demo"
+
+# VPC Configuration
+vpc_a_cidr = "10.0.0.0/16"
+vpc_b_cidr = "10.1.0.0/16"
+
+# EC2 Configuration
+# AMI is automatically selected (latest Amazon Linux 2023 ARM64)
+instance_type = "t4g.micro"
+
+# Optional: Specify a key pair for SSH access
+# key_pair_name = "csmithaws"

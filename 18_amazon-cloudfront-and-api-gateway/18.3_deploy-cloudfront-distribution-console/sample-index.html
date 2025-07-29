@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudFront Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #232f3e;
+            text-align: center;
+        }
+        .info {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-left: 4px solid #0073bb;
+            margin: 20px 0;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 CloudFront Distribution Demo</h1>
+        
+        <div class="info">
+            <strong>Success!</strong> This content is being served through Amazon CloudFront.
+        </div>
+        
+        <p>This page demonstrates:</p>
+        <ul>
+            <li>Content delivery through CloudFront edge locations</li>
+            <li>Origin Access Control (OAC) securing S3 access</li>
+            <li>Global content distribution network</li>
+            <li>Improved performance and reduced latency</li>
+        </ul>
+        
+        <p>Check your browser's developer tools to see the CloudFront headers in the response!</p>
+        
+        <div class="timestamp">
+            Page loaded at: <span id="timestamp"></span>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

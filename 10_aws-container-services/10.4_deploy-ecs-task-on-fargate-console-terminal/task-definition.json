@@ -1,0 +1,30 @@
+{
+    "family": "sample-fargate-demo", 
+    "networkMode": "awsvpc", 
+    "containerDefinitions": [
+        {
+            "name": "fargate-app", 
+            "image": "public.ecr.aws/docker/library/httpd:latest", 
+            "portMappings": [
+                {
+                    "containerPort": 80, 
+                    "hostPort": 80, 
+                    "protocol": "tcp"
+                }
+            ], 
+            "essential": true, 
+            "entryPoint": [
+                "sh",
+                "-c"
+            ], 
+            "command": [
+                "/bin/sh -c \"echo '<html><head><title>ECS Fargate Demo</title><style>body {margin-top: 40px; background-color: #333;}</style></head><body><div style=color:white;text-align:center><h1>ECS Fargate Demo</h1><h2>Success!</h2><p>Your application is running on Fargate!</p></div></body></html>' > /usr/local/apache2/htdocs/index.html && httpd-foreground\""
+            ]
+        }
+    ], 
+    "requiresCompatibilities": [
+        "FARGATE"
+    ], 
+    "cpu": "256", 
+    "memory": "512"
+}

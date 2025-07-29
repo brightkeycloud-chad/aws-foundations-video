@@ -1,0 +1,37 @@
+# Example Terraform variables for ALB Demo
+# Copy this file to terraform.tfvars and modify as needed
+
+# AWS Region (us-west-2 is recommended for this demo)
+aws_region = "us-west-2"
+
+# EC2 Instance Configuration
+instance_type = "t3.micro"
+architecture  = "x86_64"
+
+# Monitoring
+enable_detailed_monitoring = false
+
+# Network Configuration
+web_server_port = 80
+health_check_path = "/health"
+
+# Security Configuration
+allowed_cidr_blocks = ["0.0.0.0/0"]
+
+# IAM Configuration
+iam_role_name = "ALB-Demo-EC2-SSM-Role"
+instance_profile_name = "ALB-Demo-EC2-SSM-Profile"
+
+# Optional SSH Access (uncomment and set if needed)
+# enable_ssh_access = true
+# key_pair_name = "your-key-pair-name"
+
+# Custom Tags (optional)
+common_tags = {
+  Purpose     = "ALB-Demo"
+  Environment = "Training"
+  Project     = "AWS-Foundations-Video"
+  ManagedBy   = "Terraform"
+  Demo        = "17.3-deploy-alb-console"
+  Owner       = "YourName"
+}

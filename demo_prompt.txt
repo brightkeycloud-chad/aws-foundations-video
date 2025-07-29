@@ -1,0 +1,5 @@
+In this directory are subdirectories that will be used to give AWS demonstrations. The subdirectory name has the demo title as well as the tools used, such as console, terminal, sdk, cli, etc.
+For each subdirectory, do the following:
+Create a demonstration using the title that will take five minutes to deliver.
+Create a markdown readme document containing instructions for executing the demonstration, using current AWS documentation.
+Add citations in the readme with link(s) for documentation used to generate the instructions.

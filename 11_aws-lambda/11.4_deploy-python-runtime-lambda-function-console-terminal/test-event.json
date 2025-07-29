@@ -1,0 +1,5 @@
+{
+  "bucket_name": "your-lambda-demo-bucket",
+  "granularity": "MONTHLY",
+  "group_by": "SERVICE"
+}

@@ -1,0 +1,32 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and customize as needed
+
+# AWS Regions
+primary_region   = "us-east-2"
+secondary_region = "us-west-2"
+
+# Instance Configuration
+instance_type = "t4g.micro"
+architecture  = "arm64"
+
+# Networking
+web_server_port      = 80
+health_check_path    = "/health"
+allowed_cidr_blocks  = ["0.0.0.0/0"]
+
+# IAM Configuration
+iam_role_name           = "EC2-SSM-Role"
+instance_profile_name   = "EC2-SSM-Profile"
+
+# Monitoring
+enable_detailed_monitoring = false
+
+# Tags
+common_tags = {
+  Purpose     = "DNS-Reliability-Demo"
+  Environment = "Training"
+  Project     = "AWS-Foundations-Video"
+  ManagedBy   = "Terraform"
+  Owner       = "YourName"
+  CostCenter  = "Training"
+}

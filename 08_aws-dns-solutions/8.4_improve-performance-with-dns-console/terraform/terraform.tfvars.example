@@ -1,0 +1,41 @@
+# Example Terraform variables file for DNS Performance Demonstration
+# Copy this file to terraform.tfvars and customize as needed
+
+# AWS Regions for performance demonstration
+regions = {
+  us_east_1    = "us-east-1"  # For IAM resources
+  us_east_2    = "us-east-2"  # For EC2 instances
+  us_west_2    = "us-west-2"
+  eu_central_1 = "eu-central-1"
+}
+
+# Instance Configuration
+instance_type = "t4g.micro"
+architecture  = "arm64"
+
+# Networking
+web_server_port      = 80
+health_check_path    = "/health"
+allowed_cidr_blocks  = ["0.0.0.0/0"]
+
+# DNS Configuration
+ttl_seconds         = 300
+enable_health_checks = true
+
+# IAM Configuration
+iam_role_name           = "EC2-SSM-Role-Performance-Demo"
+instance_profile_name   = "EC2-SSM-Profile-Performance-Demo"
+
+# Monitoring
+enable_detailed_monitoring = false
+
+# Tags
+common_tags = {
+  Purpose     = "DNS-Performance-Demo"
+  Environment = "Training"
+  Project     = "AWS-Foundations-Video"
+  ManagedBy   = "Terraform"
+  Owner       = "YourName"
+  CostCenter  = "Training"
+  Demo        = "Route53-Performance"
+}

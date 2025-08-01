@@ -1,0 +1,9 @@
+# AWS Configuration
+aws_region = "us-west-2"
+
+# EC2 Configuration
+instance_type = "t3.micro"
+volume_size   = 30  # Minimum 30GB required for Amazon Linux 2023
+
+# Project Configuration
+project_name = "auto-scaling-group-demo"

@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "FunctionName",
+    "ParameterValue": "demo-hello-world"
+  },
+  {
+    "ParameterKey": "Runtime",
+    "ParameterValue": "python3.12"
+  }
+]

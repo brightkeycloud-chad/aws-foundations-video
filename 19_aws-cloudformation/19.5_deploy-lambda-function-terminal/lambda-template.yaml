@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Demo: Deploy a Lambda function with Python 3.12/3.13 and API Gateway using AWS CLI'
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: demo-hello-world
+    Description: Name for the Lambda function
+  
+  Runtime:
+    Type: String
+    Default: python3.12
+    AllowedValues:
+      - python3.12
+      - python3.13
+    Description: Lambda runtime environment (Python 3.12 or 3.13)
+
+Resources:
+  # IAM Role for Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: Name
+          Value: Demo-Lambda-ExecutionRole
+
+  # Lambda Function
+  HelloWorldFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Runtime: !Ref Runtime
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import datetime
+          from typing import Dict, Any
+          
+          def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
+              """
+              Lambda function handler demonstrating Python 3.12+ features
+              """
+              # Get current timestamp with improved datetime handling
+              current_time = datetime.datetime.now().isoformat()
+              
+              # Extract information from the event using modern Python patterns
+              method = event.get('httpMethod', 'Unknown')
+              path = event.get('path', 'Unknown')
+              
+              # Use match-case statement (Python 3.10+, enhanced in 3.12+)
+              match method:
+                  case 'GET':
+                      status_message = "Successfully processed GET request"
+                  case 'POST':
+                      status_message = "Successfully processed POST request"
+                  case _:
+                      status_message = f"Processed {method} request"
+              
+              # Enhanced f-string formatting (Python 3.12+)
+              greeting = f"Hello from CloudFormation Lambda Demo running Python 3.12+!"
+              
+              # Create response with improved type hints
+              response_body: Dict[str, Any] = {
+                  'message': greeting,
+                  'status': status_message,
+                  'timestamp': current_time,
+                  'request_info': {
+                      'method': method,
+                      'path': path,
+                      'event_keys': list(event.keys()) if event else []
+                  },
+                  'runtime_info': {
+                      'function_name': context.function_name,
+                      'function_version': context.function_version,
+                      'memory_limit': context.memory_limit_in_mb,
+                      'request_id': context.aws_request_id
+                  }
+              }
+              
+              return {
+                  'statusCode': 200,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'X-Python-Version': '3.12+'
+                  },
+                  'body': json.dumps(response_body, indent=2, ensure_ascii=False)
+              }
+      Description: Demo Lambda function deployed via CloudFormation
+      Timeout: 30
+      Tags:
+        - Key: Name
+          Value: Demo-HelloWorld-Function
+
+  # Lambda Permission for API Gateway
+  LambdaApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref HelloWorldFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
+
+  # API Gateway REST API
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: Demo-Lambda-API
+      Description: API Gateway for Lambda demo
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resource
+  ApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: hello
+
+  # API Gateway Method
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations'
+
+  # API Gateway Deployment
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ApiGatewayMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: prod
+
+  # CloudWatch Log Group for Lambda
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${FunctionName}'
+      RetentionInDays: 7
+
+Outputs:
+  LambdaFunctionName:
+    Description: Name of the Lambda function
+    Value: !Ref HelloWorldFunction
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaFunction
+
+  LambdaFunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt HelloWorldFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-LambdaArn
+
+  ApiGatewayUrl:
+    Description: URL of the API Gateway endpoint
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/hello'
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiUrl
+
+  ApiGatewayId:
+    Description: ID of the API Gateway
+    Value: !Ref ApiGateway
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiGatewayId

@@ -1,0 +1,27 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and customize as needed
+
+# AWS Region (us-west-2 is required for this demo)
+aws_region = "us-west-2"
+
+# EC2 Instance Type (t3.micro is free tier eligible)
+instance_type = "t3.micro"
+
+# Root volume size in GB (minimum 30GB for Amazon Linux 2023)
+root_volume_size = 30
+
+# EC2 Key Pair Name (optional - for SSH access)
+# Create a key pair in EC2 console first, then specify the name here
+# key_pair_name = "my-demo-keypair"
+
+# Enable detailed monitoring (recommended for demo)
+enable_detailed_monitoring = true
+
+# Common tags for all resources
+common_tags = {
+  Project     = "AWS Foundations Video Training"
+  Environment = "Training"
+  Purpose     = "CloudWatch Metrics Demo"
+  Owner       = "Your Name"
+  CostCenter  = "Training"
+}

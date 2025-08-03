@@ -1,0 +1,7 @@
+[
+    {"event":"user_login","user_id":123,"timestamp":"2025-08-02T00:00:00Z"},
+    {"event":"page_view","page":"/home","user_id":123,"timestamp":"2025-08-02T00:01:00Z"},
+    {"event":"purchase","product_id":456,"amount":29.99,"user_id":123,"timestamp":"2025-08-02T00:02:00Z"},
+    {"event":"cart_add","product_id":789,"quantity":2,"user_id":123,"timestamp":"2025-08-02T00:03:00Z"},
+    {"event":"user_logout","user_id":123,"timestamp":"2025-08-02T00:04:00Z"}
+]

@@ -1,0 +1,32 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+  pre_build:
+    commands:
+      - echo Logging in to CodeArtifact...
+      - aws codeartifact login --tool pip --domain demo-domain --domain-owner $AWS_ACCOUNT_ID --repository demo-python-repo
+      - echo Logged in to CodeArtifact successfully
+      - echo Installing dependencies...
+      - pip install -r requirements.txt
+  build:
+    commands:
+      - echo Running tests...
+      - python -m pytest test_app.py -v
+      - echo Build completed successfully
+  post_build:
+    commands:
+      - echo Creating deployment package...
+      - pip install -r requirements.txt -t ./package
+      - cp app.py ./package/
+      - cd package && zip -r ../deployment-package.zip . && cd ..
+      - echo Deployment package created
+
+artifacts:
+  files:
+    - deployment-package.zip
+    - app.py
+    - requirements.txt
+  name: codeartifact-demo-$(date +%Y-%m-%d)

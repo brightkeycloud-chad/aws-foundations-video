@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto8
+  pre_build:
+    commands:
+      - echo Entered the pre_build phase...
+      - mvn clean compile
+  build:
+    commands:
+      - echo Entered the build phase...
+      - mvn test
+  post_build:
+    commands:
+      - echo Entered the post_build phase...
+      - mvn package
+artifacts:
+  files:
+    - target/messageUtil-1.0.jar

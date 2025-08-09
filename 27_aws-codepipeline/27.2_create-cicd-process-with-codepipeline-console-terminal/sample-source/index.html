@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePipeline Demo Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #232f3e;
+            text-align: center;
+        }
+        .info {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-left: 4px solid #0073bb;
+            margin: 20px 0;
+        }
+        .timestamp {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AWS CodePipeline Demo</h1>
+        <div class="info">
+            <h3>Welcome to the CI/CD Pipeline Demo!</h3>
+            <p>This application was automatically built and deployed using:</p>
+            <ul>
+                <li><strong>AWS CodePipeline</strong> - Orchestrates the CI/CD workflow</li>
+                <li><strong>AWS CodeBuild</strong> - Builds and tests the application</li>
+                <li><strong>Amazon S3</strong> - Hosts the static website</li>
+                <li><strong>AWS CDK</strong> - Infrastructure as Code</li>
+            </ul>
+        </div>
+        
+        <h3>Pipeline Stages:</h3>
+        <ol>
+            <li><strong>Source:</strong> Code retrieved from S3 bucket</li>
+            <li><strong>Build:</strong> Application built using CodeBuild</li>
+            <li><strong>Deploy:</strong> Deployed to S3 static website hosting</li>
+        </ol>
+        
+        <div class="timestamp">
+            <p>Last updated: <span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

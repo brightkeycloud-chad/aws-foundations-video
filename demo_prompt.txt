@@ -3,3 +3,4 @@ For each subdirectory, do the following:
 Create a demonstration using the title that will take five minutes to deliver.
 Create a markdown readme document containing instructions for executing the demonstration, using current AWS documentation.
 Add citations in the readme with link(s) for documentation used to generate the instructions.
+If the demonstration uses code to provision resources, create a cleanup script to be executed after the demonstration is complete, ensuring the cleanup script does not require the user to enter any information.

@@ -1,0 +1,21 @@
+customer_id,tenure,monthly_charges,total_charges,contract,internet_service,churn
+CUST001,12,65.50,786.00,Month-to-month,Fiber optic,No
+CUST002,24,45.20,1084.80,One year,DSL,No
+CUST003,6,89.90,539.40,Month-to-month,Fiber optic,Yes
+CUST004,36,55.75,2007.00,Two year,DSL,No
+CUST005,3,75.25,225.75,Month-to-month,Fiber optic,Yes
+CUST006,48,42.30,2030.40,Two year,DSL,No
+CUST007,9,68.85,619.65,Month-to-month,Fiber optic,Yes
+CUST008,18,52.40,943.20,One year,DSL,No
+CUST009,2,95.15,190.30,Month-to-month,Fiber optic,Yes
+CUST010,60,38.90,2334.00,Two year,DSL,No
+CUST011,15,71.20,1068.00,Month-to-month,Fiber optic,No
+CUST012,30,49.65,1489.50,One year,DSL,No
+CUST013,4,82.40,329.60,Month-to-month,Fiber optic,Yes
+CUST014,42,44.85,1883.70,Two year,DSL,No
+CUST015,7,77.30,541.10,Month-to-month,Fiber optic,Yes
+CUST016,21,58.90,1236.90,One year,DSL,No
+CUST017,1,99.50,99.50,Month-to-month,Fiber optic,Yes
+CUST018,54,41.75,2254.50,Two year,DSL,No
+CUST019,11,73.60,809.60,Month-to-month,Fiber optic,Yes
+CUST020,27,47.20,1274.40,One year,DSL,No

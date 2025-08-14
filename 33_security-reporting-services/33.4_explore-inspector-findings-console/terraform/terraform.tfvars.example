@@ -1,0 +1,22 @@
+# Example Terraform variables file for Inspector Demo
+# Copy this file to terraform.tfvars and customize as needed
+
+# AWS Region to deploy resources
+aws_region = "us-east-1"
+
+# EC2 instance type (t3.micro is free tier eligible)
+instance_type = "t3.micro"
+
+# EC2 Key Pair name (optional - leave null if you don't need SSH access)
+# If you want SSH access, create a key pair first:
+# aws ec2 create-key-pair --key-name inspector-demo-key --query 'KeyMaterial' --output text > inspector-demo-key.pem
+key_pair_name = null
+
+# Environment name for tagging
+environment = "inspector-demo"
+
+# Whether to create a new key pair (set to true if you want to create one)
+create_key_pair = false
+
+# Path to your public key (only used if create_key_pair = true)
+public_key_path = "~/.ssh/id_rsa.pub"

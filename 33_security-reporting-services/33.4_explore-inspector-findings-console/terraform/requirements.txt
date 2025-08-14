@@ -1,0 +1,18 @@
+# Vulnerable Python packages for Inspector demo
+# These versions have known security vulnerabilities
+
+requests==2.25.1          # CVE-2023-32681
+urllib3==1.26.5           # Multiple CVEs
+boto3==1.20.26            # Older version
+botocore==1.23.26         # Older version
+Pillow==8.3.2             # CVE-2022-22817, CVE-2022-22816
+Django==3.2.13           # Multiple CVEs
+Flask==2.0.3             # CVE-2023-30861
+Jinja2==2.11.3           # CVE-2020-28493
+MarkupSafe==1.1.1        # Older version
+PyYAML==5.4.1            # CVE-2020-14343
+cryptography==3.4.8     # Multiple CVEs
+paramiko==2.8.1          # CVE-2022-24302
+lxml==4.6.5              # Multiple CVEs
+numpy==1.21.0            # CVE-2021-33430
+scipy==1.7.0             # Older version with potential issues

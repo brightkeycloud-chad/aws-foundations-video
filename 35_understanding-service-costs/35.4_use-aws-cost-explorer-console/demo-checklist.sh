@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# AWS Cost Explorer Console Demonstration Checklist
+# 5-minute demonstration timing guide
+
+echo "🎯 AWS Cost Explorer Console Demonstration Checklist"
+echo "⏱️  Total Time: 5 minutes"
+echo "=================================================="
+echo ""
+
+echo "📋 STEP 1: Enable Cost Explorer (1 minute)"
+echo "   □ Open AWS Management Console"
+echo "   □ Navigate to Cost Management service"
+echo "   □ Click 'Cost Explorer' in left navigation"
+echo "   □ Click 'Launch Cost Explorer' if first time"
+echo "   □ Explain that console access is free"
+echo ""
+
+echo "📊 STEP 2: Explore Dashboard (2 minutes)"
+echo "   □ Point out Month-to-date costs section"
+echo "   □ Explain Forecasted month end costs"
+echo "   □ Review cost trends (top 5)"
+echo "   □ Click on a trend to drill down"
+echo "   □ Examine daily costs graph"
+echo "   □ Mention data is up to previous day"
+echo ""
+
+echo "🔍 STEP 3: Use Cost Explorer Reports (1.5 minutes)"
+echo "   □ Click 'Explore costs' button"
+echo "   □ Show default reports in left navigation"
+echo "   □ Demonstrate filters panel:"
+echo "     - Filter by service (e.g., EC2, S3)"
+echo "     - Filter by time range"
+echo "     - Filter by account (if applicable)"
+echo "   □ Show 'Group by' options:"
+echo "     - Group by Service"
+echo "     - Group by Usage Type"
+echo "     - Group by Region"
+echo ""
+
+echo "💰 STEP 4: Cost Views (30 seconds)"
+echo "   □ Explain Unblended costs (standard pricing)"
+echo "   □ Explain Amortized costs (RI/Savings Plans)"
+echo "   □ Explain Net costs (after discounts)"
+echo "   □ Switch between cost views using dropdown"
+echo ""
+
+echo "🎯 KEY POINTS TO EMPHASIZE:"
+echo "   • Cost Explorer is free for console use"
+echo "   • Data available within 24 hours"
+echo "   • 13 months historical + 12 months forecast"
+echo "   • Cost Anomaly Detection auto-enabled"
+echo "   • Great for identifying cost optimization opportunities"
+echo ""
+
+echo "⚠️  TROUBLESHOOTING TIPS:"
+echo "   • No data? Wait 24 hours or create some resources"
+echo "   • Access denied? Check IAM permissions"
+echo "   • New account? Limited data is normal"
+echo ""
+
+echo "🔗 QUICK LINKS:"
+echo "   • Cost Management Console: https://console.aws.amazon.com/costmanagement/"
+echo "   • Direct Cost Explorer: https://console.aws.amazon.com/costmanagement/home#/cost-explorer"
+echo ""
+
+echo "✅ Demo complete! Participants should now understand:"
+echo "   • How to enable and access Cost Explorer"
+echo "   • How to analyze costs and trends"
+echo "   • How to use filters and grouping"
+echo "   • Different cost view types"

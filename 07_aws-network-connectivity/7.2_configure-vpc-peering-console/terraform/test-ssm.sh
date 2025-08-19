@@ -21,9 +21,10 @@ if [ ! -f "terraform.tfstate" ]; then
     exit 1
 fi
 
-# Get instance IDs
+# Get instance IDs and region
 VPC_A_ID=$(terraform output -raw vpc_a_instance_id 2>/dev/null || echo "")
 VPC_B_ID=$(terraform output -raw vpc_b_instance_id 2>/dev/null || echo "")
+REGION=$(terraform output -raw aws_region 2>/dev/null || echo "us-west-2")
 
 if [ -z "$VPC_A_ID" ] || [ -z "$VPC_B_ID" ]; then
     echo "❌ Could not get instance IDs from Terraform outputs"
@@ -33,6 +34,7 @@ fi
 echo "Instance IDs:"
 echo "VPC A: $VPC_A_ID"
 echo "VPC B: $VPC_B_ID"
+echo "Region: $REGION"
 echo ""
 
 # Function to check SSM connectivity
@@ -44,6 +46,7 @@ check_ssm_connectivity() {
     
     # Check if instance is registered with SSM
     local ssm_info=$(aws ssm describe-instance-information \
+        --region "$REGION" \
         --filters "Key=InstanceIds,Values=$instance_id" \
         --query 'InstanceInformationList[0]' \
         --output json 2>/dev/null || echo "null")
@@ -102,8 +105,8 @@ if [ "$vpc_a_ready" = true ] && [ "$vpc_b_ready" = true ]; then
     echo "  make connect-b  # Connect to VPC B instance"
     echo ""
     echo "Or use AWS CLI directly:"
-    echo "  aws ssm start-session --target $VPC_A_ID"
-    echo "  aws ssm start-session --target $VPC_B_ID"
+    echo "  aws ssm start-session --target $VPC_A_ID --region $REGION"
+    echo "  aws ssm start-session --target $VPC_B_ID --region $REGION"
 elif [ "$vpc_a_ready" = true ] || [ "$vpc_b_ready" = true ]; then
     echo "⚠️  Some instances are ready, others may need more time"
     echo "Wait a few minutes and run this script again"
@@ -114,8 +117,8 @@ else
     echo "for the instances to boot up and register with SSM, then try again."
     echo ""
     echo "Troubleshooting steps:"
-    echo "1. Verify instances are running: aws ec2 describe-instances --instance-ids $VPC_A_ID $VPC_B_ID"
-    echo "2. Check NAT Gateways are available: aws ec2 describe-nat-gateways"
+    echo "1. Verify instances are running: aws ec2 describe-instances --region $REGION --instance-ids $VPC_A_ID $VPC_B_ID"
+    echo "2. Check NAT Gateways are available: aws ec2 describe-nat-gateways --region $REGION"
     echo "3. Verify IAM role permissions: terraform output iam_role_arn"
     echo "4. Check internet connectivity from instances via NAT Gateway"
 fi

@@ -86,10 +86,12 @@ demo-info:
 connect-a:
 	@echo "Connecting to VPC A instance via SSM Session Manager..."
 	@INSTANCE_ID=$$(terraform output -raw vpc_a_instance_id 2>/dev/null); \
+	REGION=$$(terraform output -raw aws_region 2>/dev/null || echo "us-west-2"); \
 	if [ -n "$$INSTANCE_ID" ]; then \
 		echo "Instance ID: $$INSTANCE_ID"; \
+		echo "Region: $$REGION"; \
 		echo "Connecting..."; \
-		aws ssm start-session --target $$INSTANCE_ID; \
+		aws ssm start-session --target $$INSTANCE_ID --region $$REGION; \
 	else \
 		echo "Error: Could not get VPC A instance ID. Is the infrastructure deployed?"; \
 	fi
@@ -98,10 +100,12 @@ connect-a:
 connect-b:
 	@echo "Connecting to VPC B instance via SSM Session Manager..."
 	@INSTANCE_ID=$$(terraform output -raw vpc_b_instance_id 2>/dev/null); \
+	REGION=$$(terraform output -raw aws_region 2>/dev/null || echo "us-west-2"); \
 	if [ -n "$$INSTANCE_ID" ]; then \
 		echo "Instance ID: $$INSTANCE_ID"; \
+		echo "Region: $$REGION"; \
 		echo "Connecting..."; \
-		aws ssm start-session --target $$INSTANCE_ID; \
+		aws ssm start-session --target $$INSTANCE_ID --region $$REGION; \
 	else \
 		echo "Error: Could not get VPC B instance ID. Is the infrastructure deployed?"; \
 	fi
@@ -112,13 +116,14 @@ ssm-status:
 	@echo "=================================="
 	@VPC_A_ID=$$(terraform output -raw vpc_a_instance_id 2>/dev/null); \
 	VPC_B_ID=$$(terraform output -raw vpc_b_instance_id 2>/dev/null); \
+	REGION=$$(terraform output -raw aws_region 2>/dev/null || echo "us-west-2"); \
 	if [ -n "$$VPC_A_ID" ]; then \
 		echo "VPC A Instance ($$VPC_A_ID):"; \
-		aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$$VPC_A_ID" --query 'InstanceInformationList[0].{Status:PingStatus,LastPing:LastPingDateTime,AgentVersion:AgentVersion}' --output table 2>/dev/null || echo "  Not connected to SSM"; \
+		aws ssm describe-instance-information --region $$REGION --filters "Key=InstanceIds,Values=$$VPC_A_ID" --query 'InstanceInformationList[0].{Status:PingStatus,LastPing:LastPingDateTime,AgentVersion:AgentVersion}' --output table 2>/dev/null || echo "  Not connected to SSM"; \
 	fi; \
 	if [ -n "$$VPC_B_ID" ]; then \
 		echo "VPC B Instance ($$VPC_B_ID):"; \
-		aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$$VPC_B_ID" --query 'InstanceInformationList[0].{Status:PingStatus,LastPing:LastPingDateTime,AgentVersion:AgentVersion}' --output table 2>/dev/null || echo "  Not connected to SSM"; \
+		aws ssm describe-instance-information --region $$REGION --filters "Key=InstanceIds,Values=$$VPC_B_ID" --query 'InstanceInformationList[0].{Status:PingStatus,LastPing:LastPingDateTime,AgentVersion:AgentVersion}' --output table 2>/dev/null || echo "  Not connected to SSM"; \
 	fi
 
 # Test ping connectivity
@@ -157,7 +162,7 @@ get-ami:
 	aws ec2 describe-images \
 		--region $$REGION \
 		--owners amazon \
-		--filters "Name=name,Values=al2023-ami-*-arm64" \
+		--filters "Name=name,Values=al2023-ami-2023.*-arm64" \
 		          "Name=state,Values=available" \
 		          "Name=architecture,Values=arm64" \
 		--query 'Images | sort_by(@, &CreationDate) | [-1].{ImageId:ImageId,Name:Name,CreationDate:CreationDate}' \

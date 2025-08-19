@@ -1,3 +1,8 @@
+output "aws_region" {
+  description = "AWS region where resources are deployed"
+  value       = var.aws_region
+}
+
 output "vpc_a_id" {
   description = "ID of VPC A"
   value       = module.vpc_a.vpc_id
@@ -107,6 +112,7 @@ output "instance_profile_name" {
 output "demo_information" {
   description = "Key information for VPC peering demonstration"
   value = {
+    region = var.aws_region
     vpc_a = {
       id          = module.vpc_a.vpc_id
       cidr        = module.vpc_a.vpc_cidr_block
@@ -120,17 +126,17 @@ output "demo_information" {
       instance_ip = aws_instance.vpc_b_instance.private_ip
     }
     connection_commands = {
-      vpc_a = "aws ssm start-session --target ${aws_instance.vpc_a_instance.id}"
-      vpc_b = "aws ssm start-session --target ${aws_instance.vpc_b_instance.id}"
+      vpc_a = "aws ssm start-session --target ${aws_instance.vpc_a_instance.id} --region ${var.aws_region}"
+      vpc_b = "aws ssm start-session --target ${aws_instance.vpc_b_instance.id} --region ${var.aws_region}"
     }
     next_steps = [
       "1. Create VPC peering connection between ${module.vpc_a.vpc_id} and ${module.vpc_b.vpc_id}",
       "2. Accept the peering connection",
       "3. Add route to VPC A route tables: ${module.vpc_b.vpc_cidr_block} -> peering connection",
       "4. Add route to VPC B route tables: ${module.vpc_a.vpc_cidr_block} -> peering connection",
-      "5. Connect to VPC A instance: aws ssm start-session --target ${aws_instance.vpc_a_instance.id}",
+      "5. Connect to VPC A instance: aws ssm start-session --target ${aws_instance.vpc_a_instance.id} --region ${var.aws_region}",
       "6. Test connectivity: ping ${aws_instance.vpc_b_instance.private_ip}",
-      "7. Connect to VPC B instance: aws ssm start-session --target ${aws_instance.vpc_b_instance.id}",
+      "7. Connect to VPC B instance: aws ssm start-session --target ${aws_instance.vpc_b_instance.id} --region ${var.aws_region}",
       "8. Test connectivity: ping ${aws_instance.vpc_a_instance.private_ip}"
     ]
   }

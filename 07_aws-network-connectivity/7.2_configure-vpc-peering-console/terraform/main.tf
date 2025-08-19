@@ -17,14 +17,14 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# Data source to get the latest Amazon Linux 2023 ARM64 AMI
+# Data source to get the latest Amazon Linux 2023 ARM64 AMI (full version, not minimal)
 data "aws_ami" "amazon_linux_2023_arm" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-arm64"]
+    values = ["al2023-ami-2023.*-arm64"]  # Only standard AMIs, excludes minimal and ECS variants
   }
 
   filter {

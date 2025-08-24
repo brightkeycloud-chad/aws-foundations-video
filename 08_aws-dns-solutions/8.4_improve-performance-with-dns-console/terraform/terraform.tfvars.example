@@ -36,6 +36,6 @@ common_tags = {
   Project     = "AWS-Foundations-Video"
   ManagedBy   = "Terraform"
   Owner       = "YourName"
-  CostCenter  = "Training"
+  costcenter  = "demo"
   Demo        = "Route53-Performance"
 }

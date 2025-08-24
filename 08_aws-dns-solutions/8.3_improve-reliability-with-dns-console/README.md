@@ -9,6 +9,14 @@ This 5-minute demonstration shows how to configure DNS failover using Amazon Rou
 - Two web servers or load balancers in different AWS regions (for demonstration purposes)
 - Basic understanding of DNS concepts
 
+## Terraform Infrastructure
+This demonstration includes Terraform configuration that deploys:
+- **Multi-region EC2 instances**: Primary server in us-east-2, secondary in us-west-2
+- **Security groups**: HTTP/HTTPS access for web servers
+- **IAM roles**: SSM Session Manager access for instance management
+- **Web servers**: Apache with custom HTML pages showing failover status
+- **Health check endpoints**: `/health` endpoints for Route 53 monitoring
+
 ## Demonstration Scenario
 We'll configure a simple active-passive failover setup where:
 - Primary resource: Web server in US East (N. Virginia)

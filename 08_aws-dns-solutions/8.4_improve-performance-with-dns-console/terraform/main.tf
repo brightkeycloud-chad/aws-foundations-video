@@ -37,7 +37,7 @@ data "aws_ami" "amazon_linux_us_east_2" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*"]
+    values = ["al2023-ami-2023.*-kernel-*-arm64"]
   }
 
   filter {
@@ -58,7 +58,7 @@ data "aws_ami" "amazon_linux_us_west_2" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*"]
+    values = ["al2023-ami-2023.*-kernel-*-arm64"]
   }
 
   filter {
@@ -429,6 +429,36 @@ EOF
   user_data_eu_central_1 = base64encode(<<-EOF
 #!/bin/bash
 yum update -y
+
+# Check if SSM agent is installed and install if needed
+echo "Checking SSM Agent installation..."
+if ! rpm -qa | grep -q amazon-ssm-agent; then
+    echo "SSM Agent not found. Installing..."
+    yum install -y amazon-ssm-agent
+else
+    echo "SSM Agent already installed."
+fi
+
+# Ensure SSM agent is started and enabled
+echo "Starting and enabling SSM Agent..."
+systemctl start amazon-ssm-agent
+systemctl enable amazon-ssm-agent
+
+# Verify SSM agent is running
+if systemctl is-active --quiet amazon-ssm-agent; then
+    echo "SSM Agent is running successfully."
+else
+    echo "Warning: SSM Agent failed to start. Attempting restart..."
+    systemctl restart amazon-ssm-agent
+    sleep 5
+    if systemctl is-active --quiet amazon-ssm-agent; then
+        echo "SSM Agent started successfully after restart."
+    else
+        echo "Error: SSM Agent failed to start after restart."
+    fi
+fi
+
+# Install and configure Apache
 yum install -y httpd
 systemctl start httpd
 systemctl enable httpd
@@ -488,6 +518,10 @@ chown -R apache:apache /var/www/html/
 chmod 755 /var/www/html/
 chmod 644 /var/www/html/index.html
 chmod 644 /var/www/html/health
+
+# Log completion
+echo "User data script completed successfully at $(date)" >> /var/log/user-data.log
+echo "SSM Agent status: $(systemctl is-active amazon-ssm-agent)" >> /var/log/user-data.log
 EOF
   )
 }

@@ -20,7 +20,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-# Data source for latest Amazon Linux 2023 AMI in us-east-2
+# Data source for latest Amazon Linux 2023 AMI in us-east-2 (full version, not minimal)
 data "aws_ami" "amazon_linux_primary" {
   provider    = aws.primary
   most_recent = true
@@ -28,7 +28,7 @@ data "aws_ami" "amazon_linux_primary" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*"]
+    values = ["al2023-ami-2023.*-kernel-*-arm64"]
   }
 
   filter {
@@ -40,9 +40,14 @@ data "aws_ami" "amazon_linux_primary" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
 }
 
-# Data source for latest Amazon Linux 2023 AMI in us-west-2
+# Data source for latest Amazon Linux 2023 AMI in us-west-2 (full version, not minimal)
 data "aws_ami" "amazon_linux_secondary" {
   provider    = aws.secondary
   most_recent = true
@@ -50,7 +55,7 @@ data "aws_ami" "amazon_linux_secondary" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*"]
+    values = ["al2023-ami-2023.*-kernel-*-arm64"]
   }
 
   filter {
@@ -61,6 +66,11 @@ data "aws_ami" "amazon_linux_secondary" {
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
   }
 }
 
@@ -228,6 +238,13 @@ locals {
   user_data_primary = base64encode(<<-EOF
 #!/bin/bash
 yum update -y
+
+# Ensure SSM agent is installed and running (should be pre-installed on full AL2023)
+yum install -y amazon-ssm-agent
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
+
+# Install and configure Apache
 yum install -y httpd
 systemctl start httpd
 systemctl enable httpd
@@ -288,6 +305,13 @@ EOF
   user_data_secondary = base64encode(<<-EOF
 #!/bin/bash
 yum update -y
+
+# Ensure SSM agent is installed and running (should be pre-installed on full AL2023)
+yum install -y amazon-ssm-agent
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
+
+# Install and configure Apache
 yum install -y httpd
 systemctl start httpd
 systemctl enable httpd

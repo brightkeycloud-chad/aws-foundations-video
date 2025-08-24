@@ -1,7 +1,7 @@
 # AWS Python SDK (Boto3) Installation and Testing Demonstration
 
 ## Overview
-This 5-minute demonstration shows how to install the AWS SDK for Python (Boto3) and create simple scripts to interact with AWS services. Boto3 is the official AWS SDK for Python, allowing developers to write software that uses AWS services.
+This 5-minute demonstration shows how to install the AWS SDK for Python (Boto3) using a virtual environment and run simple scripts to interact with AWS services. Boto3 is the official AWS SDK for Python, allowing developers to write software that uses AWS services.
 
 ## Prerequisites
 - Python 3.7 or later installed
@@ -10,216 +10,92 @@ This 5-minute demonstration shows how to install the AWS SDK for Python (Boto3) 
 - Terminal/command line access
 - Basic Python knowledge
 
+## Quick Start
+
+### Option 1: Automated Setup and Demo
+```bash
+# Set up virtual environment and install dependencies
+./setup_venv.sh
+
+# Run all demonstration scripts
+./run_demo.sh
+```
+
+### Option 2: Manual Setup
+```bash
+# Create and activate virtual environment
+python3 -m venv aws-sdk-env
+source aws-sdk-env/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run individual scripts
+python check_credentials.py
+python list_buckets.py
+python list_instances.py
+python aws_services_demo.py
+```
+
+## Project Structure
+```
+.
+├── README.md                 # This file
+├── requirements.txt          # Python dependencies
+├── setup_venv.sh            # Virtual environment setup script
+├── run_demo.sh              # Demo runner script
+├── check_credentials.py     # AWS credential verification
+├── list_buckets.py          # S3 bucket listing demo
+├── list_instances.py        # EC2 instance listing demo
+└── aws_services_demo.py     # Multi-service demonstration
+```
+
 ## Demonstration Steps (5 minutes)
 
-### Step 1: Verify Python Installation (30 seconds)
-1. Check Python version:
+### Step 1: Set Up Virtual Environment (1 minute)
+1. Run the setup script:
    ```bash
-   python3 --version
-   # or
-   python --version
+   ./setup_venv.sh
    ```
-2. Check pip installation:
+   
+2. Activate the virtual environment:
    ```bash
-   pip3 --version
-   # or  
-   pip --version
+   source aws-sdk-env/bin/activate
    ```
 
-### Step 2: Install Boto3 (1 minute)
-1. Install Boto3 using pip:
+3. Verify installation:
    ```bash
-   pip3 install boto3
-   # or for user-specific installation
-   pip3 install --user boto3
+   python -c "import boto3; print(boto3.__version__)"
    ```
 
-2. Verify installation:
+### Step 2: Test AWS Credentials (30 seconds)
+1. Run the credential check script:
    ```bash
-   python3 -c "import boto3; print(boto3.__version__)"
+   python check_credentials.py
    ```
 
-3. Optional: Install with specific version:
-   ```bash
-   pip3 install boto3==1.34.0
-   ```
-
-### Step 3: Create a Simple S3 Test Script (1.5 minutes)
-1. Create a test directory and file:
-   ```bash
-   mkdir boto3-demo
-   cd boto3-demo
-   ```
-
-2. Create a simple S3 listing script:
-   ```bash
-   cat > list_buckets.py << 'EOF'
-   import boto3
-   from botocore.exceptions import ClientError, NoCredentialsError
-
-   def list_s3_buckets():
-       """List all S3 buckets in the account"""
-       try:
-           # Create S3 client
-           s3_client = boto3.client('s3')
-           
-           print("Hello, Amazon S3! Let's list your buckets:")
-           
-           # List buckets
-           response = s3_client.list_buckets()
-           
-           if 'Buckets' in response and response['Buckets']:
-               for bucket in response['Buckets']:
-                   print(f"  - {bucket['Name']} (Created: {bucket['CreationDate']})")
-           else:
-               print("  No buckets found!")
-               
-       except NoCredentialsError:
-           print("Error: AWS credentials not found. Please configure your credentials.")
-       except ClientError as e:
-           print(f"Error: {e}")
-       except Exception as e:
-           print(f"Unexpected error: {e}")
-
-   if __name__ == "__main__":
-       list_s3_buckets()
-   EOF
-   ```
-
-### Step 4: Test AWS Credentials and Run Script (1 minute)
+### Step 3: Run S3 Bucket Demo (1 minute)
 1. Test the S3 script:
    ```bash
-   python3 list_buckets.py
+   python list_buckets.py
    ```
 
-2. Check AWS credentials configuration:
+### Step 4: Run EC2 Instance Demo (1 minute)
+1. Run the EC2 script:
    ```bash
-   python3 -c "
-   import boto3
-   try:
-       sts = boto3.client('sts')
-       identity = sts.get_caller_identity()
-       print(f'Account: {identity[\"Account\"]}')
-       print(f'User/Role: {identity[\"Arn\"]}')
-   except Exception as e:
-       print(f'Credential error: {e}')
-   "
+   python list_instances.py
    ```
 
-### Step 5: Create an EC2 Instance Listing Script (1 minute)
-1. Create an EC2 script:
+### Step 5: Run Multi-Service Demo (1.5 minutes)
+1. Run the multi-service demo:
    ```bash
-   cat > list_instances.py << 'EOF'
-   import boto3
-   from botocore.exceptions import ClientError
-
-   def list_ec2_instances():
-       """List EC2 instances in the default region"""
-       try:
-           # Create EC2 client
-           ec2_client = boto3.client('ec2')
-           
-           print("Listing EC2 instances:")
-           
-           # Describe instances
-           response = ec2_client.describe_instances()
-           
-           instance_count = 0
-           for reservation in response['Reservations']:
-               for instance in reservation['Instances']:
-                   instance_count += 1
-                   instance_id = instance['InstanceId']
-                   instance_type = instance['InstanceType']
-                   state = instance['State']['Name']
-                   
-                   # Get instance name from tags
-                   name = 'N/A'
-                   if 'Tags' in instance:
-                       for tag in instance['Tags']:
-                           if tag['Key'] == 'Name':
-                               name = tag['Value']
-                               break
-                   
-                   print(f"  - {instance_id} ({name}) - {instance_type} - {state}")
-           
-           if instance_count == 0:
-               print("  No instances found!")
-           else:
-               print(f"Total instances: {instance_count}")
-               
-       except ClientError as e:
-           print(f"Error: {e}")
-       except Exception as e:
-           print(f"Unexpected error: {e}")
-
-   if __name__ == "__main__":
-       list_ec2_instances()
-   EOF
+   python aws_services_demo.py
    ```
 
-2. Run the EC2 script:
+### Step 6: Run Complete Demo (30 seconds)
+1. Run all demos in sequence:
    ```bash
-   python3 list_instances.py
-   ```
-
-### Step 6: Demonstrate Different AWS Service Clients (1 minute)
-1. Create a multi-service demo:
-   ```bash
-   cat > aws_services_demo.py << 'EOF'
-   import boto3
-   from botocore.exceptions import ClientError
-
-   def demo_aws_services():
-       """Demonstrate connecting to multiple AWS services"""
-       
-       print("=== AWS Services Demo ===\n")
-       
-       # S3 Service
-       print("1. S3 Service:")
-       try:
-           s3 = boto3.client('s3')
-           buckets = s3.list_buckets()
-           print(f"   Found {len(buckets.get('Buckets', []))} S3 buckets")
-       except Exception as e:
-           print(f"   S3 Error: {e}")
-       
-       # EC2 Service
-       print("\n2. EC2 Service:")
-       try:
-           ec2 = boto3.client('ec2')
-           regions = ec2.describe_regions()
-           print(f"   Available regions: {len(regions['Regions'])}")
-           print(f"   Current region: {ec2.meta.region_name}")
-       except Exception as e:
-           print(f"   EC2 Error: {e}")
-       
-       # IAM Service
-       print("\n3. IAM Service:")
-       try:
-           iam = boto3.client('iam')
-           user = iam.get_user()
-           print(f"   Current user: {user['User']['UserName']}")
-       except Exception as e:
-           print(f"   IAM Error: {e}")
-       
-       # STS Service (always works if credentials are valid)
-       print("\n4. STS Service:")
-       try:
-           sts = boto3.client('sts')
-           identity = sts.get_caller_identity()
-           print(f"   Account ID: {identity['Account']}")
-           print(f"   User ARN: {identity['Arn']}")
-       except Exception as e:
-           print(f"   STS Error: {e}")
-
-   if __name__ == "__main__":
-       demo_aws_services()
-   EOF
-   ```
-
-2. Run the multi-service demo:
-   ```bash
-   python3 aws_services_demo.py
+   ./run_demo.sh
    ```
 
 ## Key Boto3 Concepts

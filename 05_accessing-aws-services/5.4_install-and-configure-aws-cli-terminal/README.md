@@ -37,6 +37,14 @@ unzip awscliv2.zip
 sudo ./aws/install
 ```
 
+#### For Amazon Linux ARM (aarch64):
+```bash
+# Download and install
+curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+```
+
 #### For Windows:
 ```powershell
 # Download the MSI installer from:

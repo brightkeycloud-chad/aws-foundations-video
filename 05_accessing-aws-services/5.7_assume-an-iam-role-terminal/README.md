@@ -24,49 +24,21 @@ This 5-minute demonstration shows how to assume an IAM role using the AWS CLI an
    aws iam get-user
    ```
 
-### Step 2: Create a Demo Role (1 minute)
+### Step 2: Create a Demo Role (30 seconds)
 *Note: This step can be pre-created for the demo*
 
-1. Create a trust policy document:
+1. Run the automated setup script:
    ```bash
-   cat > trust-policy.json << 'EOF'
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Principal": {
-           "AWS": "arn:aws:iam::ACCOUNT-ID:root"
-         },
-         "Action": "sts:AssumeRole",
-         "Condition": {}
-       }
-     ]
-   }
-   EOF
+   ./create-demo-role.sh
    ```
-
-2. Create the role (replace ACCOUNT-ID with your actual account ID):
-   ```bash
-   # Get your account ID
-   ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
    
-   # Update the trust policy with your account ID
-   sed -i.bak "s/ACCOUNT-ID/$ACCOUNT_ID/g" trust-policy.json
-   
-   # Create the role
-   aws iam create-role \
-     --role-name DemoAssumeRole \
-     --assume-role-policy-document file://trust-policy.json \
-     --description "Demo role for assume role demonstration"
-   ```
-
-3. Attach a policy to the role:
-   ```bash
-   aws iam attach-role-policy \
-     --role-name DemoAssumeRole \
-     --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-   ```
+   This script will:
+   - Set up a Python virtual environment with boto3
+   - Get your AWS account ID automatically
+   - Create the trust policy with the correct account ID
+   - Create the DemoAssumeRole IAM role
+   - Attach the S3ReadOnlyAccess policy
+   - Display the role ARN for use in the next steps
 
 ### Step 3: Assume the Role Using AWS CLI (1.5 minutes)
 1. Assume the role and capture the credentials:
@@ -176,114 +148,21 @@ aws sts assume-role \
 ## Scripting Role Assumption
 
 ### Bash Script for Role Assumption
+Use the provided bash script for automated role assumption:
+
 ```bash
-cat > assume-role.sh << 'EOF'
-#!/bin/bash
-
-# Function to assume a role and export credentials
-assume_role() {
-    local role_arn=$1
-    local session_name=${2:-"cli-session-$(date +%s)"}
-    local duration=${3:-3600}
-    
-    echo "Assuming role: $role_arn"
-    
-    # Assume the role
-    local output=$(aws sts assume-role \
-        --role-arn "$role_arn" \
-        --role-session-name "$session_name" \
-        --duration-seconds "$duration" 2>/dev/null)
-    
-    if [ $? -eq 0 ]; then
-        # Export the credentials
-        export AWS_ACCESS_KEY_ID=$(echo "$output" | jq -r '.Credentials.AccessKeyId')
-        export AWS_SECRET_ACCESS_KEY=$(echo "$output" | jq -r '.Credentials.SecretAccessKey')
-        export AWS_SESSION_TOKEN=$(echo "$output" | jq -r '.Credentials.SessionToken')
-        
-        echo "✅ Successfully assumed role!"
-        echo "Session expires: $(echo "$output" | jq -r '.Credentials.Expiration')"
-        
-        # Verify the assumption
-        aws sts get-caller-identity
-    else
-        echo "❌ Failed to assume role"
-        return 1
-    fi
-}
-
-# Usage example
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <role-arn> [session-name] [duration-seconds]"
-    echo "Example: $0 arn:aws:iam::123456789012:role/MyRole my-session 3600"
-    exit 1
-fi
-
-assume_role "$@"
-EOF
-
-chmod +x assume-role.sh
+./assume-role.sh arn:aws:iam::123456789012:role/MyRole my-session 3600
 ```
 
 ### Python Script for Role Assumption
+Activate the virtual environment and use the Python script:
+
 ```bash
-cat > assume_role.py << 'EOF'
-#!/usr/bin/env python3
-import boto3
-import json
-import os
-import sys
-from datetime import datetime
+# Activate the virtual environment (created by setup script)
+source venv/bin/activate
 
-def assume_role(role_arn, session_name=None, duration=3600):
-    """Assume an IAM role and return temporary credentials"""
-    
-    if not session_name:
-        session_name = f"python-session-{int(datetime.now().timestamp())}"
-    
-    try:
-        # Create STS client
-        sts_client = boto3.client('sts')
-        
-        # Assume the role
-        response = sts_client.assume_role(
-            RoleArn=role_arn,
-            RoleSessionName=session_name,
-            DurationSeconds=duration
-        )
-        
-        credentials = response['Credentials']
-        
-        # Set environment variables
-        os.environ['AWS_ACCESS_KEY_ID'] = credentials['AccessKeyId']
-        os.environ['AWS_SECRET_ACCESS_KEY'] = credentials['SecretAccessKey']
-        os.environ['AWS_SESSION_TOKEN'] = credentials['SessionToken']
-        
-        print(f"✅ Successfully assumed role: {role_arn}")
-        print(f"Session expires: {credentials['Expiration']}")
-        
-        # Verify the assumption
-        identity = sts_client.get_caller_identity()
-        print(f"Current identity: {identity['Arn']}")
-        
-        return credentials
-        
-    except Exception as e:
-        print(f"❌ Failed to assume role: {e}")
-        return None
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python3 assume_role.py <role-arn> [session-name] [duration]")
-        sys.exit(1)
-    
-    role_arn = sys.argv[1]
-    session_name = sys.argv[2] if len(sys.argv) > 2 else None
-    duration = int(sys.argv[3]) if len(sys.argv) > 3 else 3600
-    
-    assume_role(role_arn, session_name, duration)
-EOF
-
-chmod +x assume_role.py
+# Use the Python script
+python3 assume_role.py arn:aws:iam::123456789012:role/MyRole my-session 3600
 ```
 
 ## Best Practices
@@ -333,9 +212,24 @@ aws iam get-role --role-name MyRole --query 'Role.MaxSessionDuration'
 ```
 
 ## Cleanup
+
+### Clean Up Demo Resources
+After completing the demonstration, clean up the created resources:
+
 ```bash
-# Unset temporary credentials
+./cleanup-demo-role.sh
+```
+
+### Clear Temporary Credentials
+```bash
+# Unset temporary credentials from environment
 unset AWS_ACCESS_KEY_ID
+unset AWS_SECRET_ACCESS_KEY
+unset AWS_SESSION_TOKEN
+unset AWS_PROFILE
+
+# Or start a new terminal session
+```set AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
 unset AWS_PROFILE

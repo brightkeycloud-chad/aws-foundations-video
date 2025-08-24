@@ -92,6 +92,19 @@ After enabling a Local Zone, you can:
 - **Network connectivity**: Local Zones connect back to the parent region
 - **Instance types**: Limited instance types are available in Local Zones
 
+## Testing Local Zone Instance Type Availability
+
+### Checking Available Instance Types in Local Zones
+After enabling a Local Zone, test how many EC2 instance types are available:
+
+```bash
+aws ec2 describe-instance-type-offerings --location-type availability-zone --region us-east-1 --output table | grep [LOCAL-ZONE-NAME] | wc -l
+```
+
+Replace `[LOCAL-ZONE-NAME]` with the actual Local Zone name (e.g., `us-east-1-nyc-1a`)
+
+This command helps you understand the instance type limitations in Local Zones compared to standard Availability Zones.
+
 ## Troubleshooting Tips
 - If no Local Zones appear, ensure you're in a supported region
 - Some Local Zones may not be available in all accounts initially

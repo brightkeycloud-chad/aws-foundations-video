@@ -68,6 +68,18 @@ By the end of this demonstration, you will:
 - Some AZs may be unavailable for new resources due to capacity constraints
 - AZ availability can vary by instance type and service
 
+## Testing AZ Inventory Restrictions
+
+### Finding the AZ with Restricted Inventory
+1. **Identify the physical AZ**: Look for the availability zone that maps to logical AZ ID `use1-az3`
+2. **Check instance type offerings**: Once you've identified which AZ name (e.g., us-east-1e) corresponds to `use1-az3`, run:
+   ```bash
+   aws ec2 describe-instance-type-offerings --location-type availability-zone --region us-east-1 --output table | grep [AZ-NAME] | wc -l
+   ```
+   Replace `[AZ-NAME]` with the actual AZ name that maps to `use1-az3`
+
+3. **Compare results**: This command counts available instance types in that specific AZ, helping identify capacity restrictions
+
 ## Additional Resources
 For more detailed information about availability zones and their IDs, refer to the AWS documentation links in the Citations section below.
 

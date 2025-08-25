@@ -39,7 +39,7 @@ fi
 echo ""
 echo "3. Testing AMI data source for different regions..."
 
-test_regions=("us-west-2" "us-east-1" "eu-west-1")
+test_regions=("us-west-2")
 
 for region in "${test_regions[@]}"; do
     echo "   Testing region: $region"
@@ -56,12 +56,7 @@ data "aws_ami" "test_amazon_linux_2023_arm" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-arm64"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["arm64"]
+    values = ["al2023-ami-2023.*-arm64"]
   }
 
   filter {

@@ -20,7 +20,7 @@ variable "vpc_a_cidr" {
   description = "CIDR block for VPC A"
   type        = string
   default     = "10.0.0.0/16"
-  
+
   validation {
     condition     = can(cidrhost(var.vpc_a_cidr, 0))
     error_message = "VPC A CIDR must be a valid IPv4 CIDR block."
@@ -31,7 +31,7 @@ variable "vpc_b_cidr" {
   description = "CIDR block for VPC B"
   type        = string
   default     = "10.1.0.0/16"
-  
+
   validation {
     condition     = can(cidrhost(var.vpc_b_cidr, 0))
     error_message = "VPC B CIDR must be a valid IPv4 CIDR block."
@@ -42,7 +42,7 @@ variable "instance_type" {
   description = "EC2 instance type"
   type        = string
   default     = "t4g.micro"
-  
+
   validation {
     condition     = can(regex("^t4g\\.", var.instance_type))
     error_message = "Instance type must be a t4g instance type for ARM architecture."

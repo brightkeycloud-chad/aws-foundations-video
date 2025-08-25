@@ -1,7 +1,7 @@
 # Modify EC2 Instance Attributes - Terminal Demonstration
 
 ## Overview
-This 5-minute demonstration shows how to modify various Amazon EC2 instance attributes using the AWS CLI from the terminal. You'll learn to change instance properties like termination protection, source/destination checking, and user data using command-line tools.
+This 5-minute demonstration shows how to modify various Amazon EC2 instance attributes using the AWS CLI from the terminal. You'll learn to change instance properties like termination protection, source/destination checking, and user data using automated shell scripts and command-line tools.
 
 ## Duration
 5 minutes
@@ -12,88 +12,168 @@ This 5-minute demonstration shows how to modify various Amazon EC2 instance attr
 - Terminal or command prompt access
 - IAM permissions for EC2 instance modification
 - Basic familiarity with command-line interfaces
+- Optional: `jq` for enhanced IMDS settings display (install with `brew install jq` on macOS or `apt-get install jq` on Ubuntu)
 
 ## Learning Objectives
 By the end of this demonstration, you will:
 - Understand various EC2 instance attributes that can be modified
-- Learn AWS CLI commands for instance attribute modification
+- Learn AWS CLI commands for instance attribute modification through automated scripts
 - Know when instances need to be stopped vs running for changes
 - Understand security implications of attribute changes
 
-## Step-by-Step Instructions
+## Quick Start
+
+### Option 1: Run Complete Interactive Demo
+```bash
+./run-demo.sh
+```
+This master script will guide you through the entire demonstration with prompts and explanations.
+
+### Option 2: Run Individual Scripts
+1. **Setup and list instances:**
+   ```bash
+   ./scripts/setup.sh
+   ```
+
+2. **Set your instance ID:**
+   ```bash
+   export INSTANCE_ID=i-1234567890abcdef0  # Replace with your instance ID
+   ```
+
+3. **Run individual demonstration scripts:**
+   ```bash
+   ./scripts/view-attributes.sh
+   ./scripts/modify-termination-protection.sh
+   ./scripts/modify-source-dest-check.sh
+   ./scripts/modify-imds-settings.sh
+   ./scripts/modify-instance-type.sh        # Optional - stops/starts instance
+   ./scripts/cleanup.sh
+   ```
+
+### Option 3: Batch Operations
+```bash
+# Modify multiple instances by tag
+./scripts/batch-operations.sh --tag-filter Environment=Development --enable-protection
+
+# Modify specific instances
+./scripts/batch-operations.sh --instance-ids i-123,i-456 --disable-protection
+```
+
+## Script Descriptions
+
+### Core Demo Scripts
+
+| Script | Purpose | Instance State Required |
+|--------|---------|------------------------|
+| `setup.sh` | Verify AWS CLI and list instances | Any |
+| `view-attributes.sh` | Display current instance attributes | Any |
+| `modify-termination-protection.sh` | Enable/disable termination protection | Running or Stopped |
+| `modify-source-dest-check.sh` | Modify source/destination checking | Running or Stopped |
+| `modify-imds-settings.sh` | Configure IMDS security settings | Running or Stopped |
+| `modify-instance-type.sh` | Change instance type | Stopped (script handles this) |
+| `cleanup.sh` | Reset all changes to safe defaults | Any |
+
+### Additional Scripts
+
+| Script | Purpose | Description |
+|--------|---------|-------------|
+| `run-demo.sh` | Master interactive demo | Runs complete demonstration with user guidance |
+| `batch-operations.sh` | Bulk operations | Modify multiple instances simultaneously |
+
+## Detailed Step-by-Step Instructions
 
 ### Step 1: Setup and Verification (1 minute)
-1. Open your terminal or command prompt
-2. Verify AWS CLI is configured:
-   ```bash
-   aws sts get-caller-identity
-   ```
-3. List your EC2 instances to get the instance ID:
-   ```bash
-   aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,InstanceType]' --output table
-   ```
-4. Set environment variable for convenience (replace with your instance ID):
-   ```bash
-   export INSTANCE_ID=i-1234567890abcdef0
-   ```
+Run the setup script to verify your environment:
+```bash
+./scripts/setup.sh
+```
 
-### Step 2: View Current Instance Attributes (1 minute)
-1. Check current instance attributes:
-   ```bash
-   # View instance details
-   aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].[InstanceId,InstanceType,State.Name]' --output table
-   
-   # Check termination protection status
-   aws ec2 describe-instance-attribute --instance-id $INSTANCE_ID --attribute disableApiTermination
-   
-   # Check source/destination check status
-   aws ec2 describe-instance-attribute --instance-id $INSTANCE_ID --attribute sourceDestCheck
-   ```
+This script will:
+- Verify AWS CLI installation and configuration
+- Display your current AWS identity
+- List available EC2 instances
+- Provide instructions for setting the INSTANCE_ID environment variable
 
-### Step 3: Modify Termination Protection (1 minute)
-1. Enable termination protection:
-   ```bash
-   aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --disable-api-termination
-   ```
-2. Verify the change:
-   ```bash
-   aws ec2 describe-instance-attribute --instance-id $INSTANCE_ID --attribute disableApiTermination
-   ```
-3. Disable termination protection (for cleanup):
-   ```bash
-   aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --no-disable-api-termination
-   ```
+### Step 2: Set Instance ID
+After reviewing the available instances, set your target instance:
+```bash
+export INSTANCE_ID=i-1234567890abcdef0  # Replace with your actual instance ID
+```
 
-### Step 4: Modify Source/Destination Check (1 minute)
-1. Disable source/destination checking (useful for NAT instances):
-   ```bash
-   aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --source-dest-check "{\"Value\": false}"
-   ```
-2. Verify the change:
-   ```bash
-   aws ec2 describe-instance-attribute --instance-id $INSTANCE_ID --attribute sourceDestCheck
-   ```
-3. Re-enable source/destination checking:
-   ```bash
-   aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --source-dest-check "{\"Value\": true}"
-   ```
+### Step 3: View Current Instance Attributes (1 minute)
+```bash
+./scripts/view-attributes.sh
+```
 
-### Step 5: Modify Instance Type (1 minute)
-**Note**: Instance must be stopped for this operation
-1. Stop the instance:
-   ```bash
-   aws ec2 stop-instances --instance-ids $INSTANCE_ID
-   aws ec2 wait instance-stopped --instance-ids $INSTANCE_ID
-   ```
-2. Change instance type:
-   ```bash
-   aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --instance-type "{\"Value\": \"t3.small\"}"
-   ```
-3. Start the instance:
-   ```bash
-   aws ec2 start-instances --instance-ids $INSTANCE_ID
-   aws ec2 wait instance-running --instance-ids $INSTANCE_ID
-   ```
+This script displays:
+- Instance details (ID, type, state, IP addresses)
+- Termination protection status
+- Source/destination check status
+- Security groups
+- EBS optimization status
+
+### Step 4: Modify Termination Protection (1 minute)
+```bash
+./scripts/modify-termination-protection.sh
+```
+
+This interactive script will:
+- Show current termination protection status
+- Enable termination protection
+- Verify the change
+- Prompt before disabling (for demo cleanup)
+- Provide educational information about the feature
+
+### Step 5: Modify Source/Destination Check (1 minute)
+```bash
+./scripts/modify-source-dest-check.sh
+```
+
+This interactive script will:
+- Show current source/destination check status
+- Disable the check (for NAT instance scenarios)
+- Verify the change
+- Prompt before re-enabling (security best practice)
+- Explain when to use this feature
+
+### Step 6: Modify IMDS Settings (1 minute)
+```bash
+./scripts/modify-imds-settings.sh
+```
+
+This interactive script will:
+- Show current IMDS (Instance Metadata Service) configuration
+- Demonstrate security hardening by requiring IMDSv2
+- Test IMDS access methods (IMDSv1 vs IMDSv2)
+- Explain security implications of different IMDS settings
+- Optionally revert to less restrictive settings
+
+### Step 7: Modify Instance Type (1 minute) - Optional
+```bash
+./scripts/modify-instance-type.sh
+```
+
+**⚠️ Warning**: This script will stop and restart your instance!
+
+This script will:
+- Display current instance type and state
+- Warn about service interruption
+- Stop the instance if running
+- Change the instance type
+- Optionally restart the instance
+- Provide guidance on instance type selection
+
+### Step 8: Cleanup
+```bash
+./scripts/cleanup.sh
+```
+
+This script resets all demonstration changes:
+- Disables termination protection
+- Enables source/destination check
+- Configures IMDS to secure defaults (IMDSv2 required)
+- Shows final attribute status
+- Provides summary of changes
 
 ## Key Instance Attributes You Can Modify
 
@@ -102,6 +182,7 @@ By the end of this demonstration, you will:
 - **Source/Destination Check**: For NAT instances and routing
 - **Security Groups**: Change firewall rules
 - **User Data**: Modify startup scripts (takes effect on next boot)
+- **IMDS Settings**: Configure Instance Metadata Service security
 
 ### Stop Required (Instance Must Be Stopped)
 - **Instance Type**: Change compute resources
@@ -138,6 +219,21 @@ aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --ebs-optimized "{\
 
 # Enable enhanced networking
 aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --sriov-net-support simple
+```
+
+### IMDS Security Configuration
+```bash
+# Configure IMDS to require tokens (IMDSv2 only) - more secure
+aws ec2 modify-instance-metadata-options --instance-id $INSTANCE_ID --http-tokens required --http-put-response-hop-limit 1 --http-endpoint enabled
+
+# Allow both IMDSv1 and IMDSv2 (less secure)
+aws ec2 modify-instance-metadata-options --instance-id $INSTANCE_ID --http-tokens optional --http-put-response-hop-limit 2 --http-endpoint enabled
+
+# Disable IMDS entirely
+aws ec2 modify-instance-metadata-options --instance-id $INSTANCE_ID --http-endpoint disabled
+
+# Check current IMDS settings
+aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].MetadataOptions'
 ```
 
 ## Error Handling and Validation

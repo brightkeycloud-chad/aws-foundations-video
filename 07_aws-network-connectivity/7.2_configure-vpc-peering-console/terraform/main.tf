@@ -24,7 +24,7 @@ data "aws_ami" "amazon_linux_2023_arm" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.*-arm64"]  # Only standard AMIs, excludes minimal and ECS variants
+    values = ["al2023-ami-2023.*-arm64"] # Only standard AMIs, excludes minimal and ECS variants
   }
 
   filter {
@@ -46,7 +46,7 @@ data "aws_ami" "amazon_linux_2023_arm" {
 # IAM role for EC2 instances to use SSM Session Manager
 resource "aws_iam_role" "ec2_ssm_role" {
   name_prefix = "${var.project_name}-ec2-ssm-role-"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -86,27 +86,27 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
 
 # VPC A - First VPC for peering demonstration
 module "vpc_a" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
   name = "${var.project_name}-vpc-a"
   cidr = var.vpc_a_cidr
 
-  azs             = slice(data.aws_availability_zones.available.names, 0, 2)
+  azs = slice(data.aws_availability_zones.available.names, 0, 2)
   private_subnets = [
-    cidrsubnet(var.vpc_a_cidr, 8, 1),  # 10.0.1.0/24
-    cidrsubnet(var.vpc_a_cidr, 8, 2)   # 10.0.2.0/24
+    cidrsubnet(var.vpc_a_cidr, 8, 1), # 10.0.1.0/24
+    cidrsubnet(var.vpc_a_cidr, 8, 2)  # 10.0.2.0/24
   ]
   public_subnets = [
     cidrsubnet(var.vpc_a_cidr, 8, 101), # 10.0.101.0/24
     cidrsubnet(var.vpc_a_cidr, 8, 102)  # 10.0.102.0/24
   ]
 
-  enable_nat_gateway = true
-  single_nat_gateway = true  # Only one NAT Gateway in primary AZ
-  enable_vpn_gateway = false
+  enable_nat_gateway   = true
+  single_nat_gateway   = true # Only one NAT Gateway in primary AZ
+  enable_vpn_gateway   = false
   enable_dns_hostnames = true
-  enable_dns_support = true
+  enable_dns_support   = true
 
   tags = {
     Name        = "${var.project_name}-vpc-a"
@@ -117,27 +117,27 @@ module "vpc_a" {
 
 # VPC B - Second VPC for peering demonstration
 module "vpc_b" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
   name = "${var.project_name}-vpc-b"
   cidr = var.vpc_b_cidr
 
-  azs             = slice(data.aws_availability_zones.available.names, 0, 2)
+  azs = slice(data.aws_availability_zones.available.names, 0, 2)
   private_subnets = [
-    cidrsubnet(var.vpc_b_cidr, 8, 1),  # 10.1.1.0/24
-    cidrsubnet(var.vpc_b_cidr, 8, 2)   # 10.1.2.0/24
+    cidrsubnet(var.vpc_b_cidr, 8, 1), # 10.1.1.0/24
+    cidrsubnet(var.vpc_b_cidr, 8, 2)  # 10.1.2.0/24
   ]
   public_subnets = [
     cidrsubnet(var.vpc_b_cidr, 8, 101), # 10.1.101.0/24
     cidrsubnet(var.vpc_b_cidr, 8, 102)  # 10.1.102.0/24
   ]
 
-  enable_nat_gateway = true
-  single_nat_gateway = true  # Only one NAT Gateway in primary AZ
-  enable_vpn_gateway = false
+  enable_nat_gateway   = true
+  single_nat_gateway   = true # Only one NAT Gateway in primary AZ
+  enable_vpn_gateway   = false
   enable_dns_hostnames = true
-  enable_dns_support = true
+  enable_dns_support   = true
 
   tags = {
     Name        = "${var.project_name}-vpc-b"
@@ -263,7 +263,7 @@ resource "aws_instance" "vpc_a_instance" {
   subnet_id              = module.vpc_a.private_subnets[0]
   vpc_security_group_ids = [aws_security_group.vpc_a_instance_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
-  
+
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     vpc_name = "VPC-A"
   }))
@@ -282,7 +282,7 @@ resource "aws_instance" "vpc_b_instance" {
   subnet_id              = module.vpc_b.private_subnets[0]
   vpc_security_group_ids = [aws_security_group.vpc_b_instance_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
-  
+
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     vpc_name = "VPC-B"
   }))

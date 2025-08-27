@@ -14,11 +14,15 @@ def lambda_handler(event, context):
     """
     Lambda function deployed as container image.
     Processes data and generates analytics using built-in Python libraries.
+    Includes local testing support.
     """
     
     logger.info(f"Container function started at {datetime.now(timezone.utc).isoformat()}")
     logger.info(f"Python version: {os.sys.version}")
     logger.info(f"Received event: {json.dumps(event)}")
+    
+    # Check if running in local test mode
+    is_local_test = os.environ.get('AWS_ACCESS_KEY_ID') == 'test'
     
     try:
         # Extract parameters
@@ -44,29 +48,25 @@ def lambda_handler(event, context):
         # Perform analytics using built-in Python functions
         analytics = perform_analytics(data, data_type)
         
-        # Save results to S3
-        s3_client = boto3.client('s3')
-        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+        # Handle S3 operations (mock for local testing)
+        if is_local_test:
+            logger.info("Local test mode: Skipping S3 operations")
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+            s3_results = {
+                'raw_data': f"s3://{output_bucket}/analytics/{data_type}/raw-data-{timestamp}.json",
+                'analytics': f"s3://{output_bucket}/analytics/{data_type}/results-{timestamp}.json"
+            }
+        else:
+            # Save results to S3 (real AWS environment)
+            s3_results = save_to_s3(data, analytics, data_type, output_bucket)
         
-        # Save raw data as JSON
-        json_key = f"analytics/{data_type}/raw-data-{timestamp}.json"
-        s3_client.put_object(
-            Bucket=output_bucket,
-            Key=json_key,
-            Body=json.dumps(data, indent=2, default=str),
-            ContentType='application/json'
-        )
-        
-        # Save analytics results
-        analytics_key = f"analytics/{data_type}/results-{timestamp}.json"
-        s3_client.put_object(
-            Bucket=output_bucket,
-            Key=analytics_key,
-            Body=json.dumps(analytics, indent=2, default=str),
-            ContentType='application/json'
-        )
-        
-        logger.info(f"Results saved to S3: {output_bucket}")
+        # Create context mock for local testing
+        if not hasattr(context, 'function_name'):
+            context = type('MockContext', (), {
+                'function_name': 'local-test-function',
+                'aws_request_id': 'local-test-request-id',
+                'memory_limit_in_mb': 512
+            })()
         
         return {
             'statusCode': 200,
@@ -74,10 +74,7 @@ def lambda_handler(event, context):
                 'message': 'Analytics processing completed successfully',
                 'data_type': data_type,
                 'records_processed': len(data),
-                'output_files': {
-                    'raw_data': f"s3://{output_bucket}/{json_key}",
-                    'analytics': f"s3://{output_bucket}/{analytics_key}"
-                },
+                'output_files': s3_results,
                 'analytics_summary': {
                     'total_records': analytics['summary']['total_records'],
                     'key_metrics': analytics['key_metrics']
@@ -86,7 +83,8 @@ def lambda_handler(event, context):
                     'function_name': context.function_name,
                     'request_id': context.aws_request_id,
                     'memory_limit': context.memory_limit_in_mb,
-                    'python_version': os.sys.version.split()[0]
+                    'python_version': os.sys.version.split()[0],
+                    'local_test_mode': is_local_test
                 }
             })
         }
@@ -97,9 +95,40 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': json.dumps({
                 'error': 'Processing failed',
-                'details': str(e)
+                'details': str(e),
+                'local_test_mode': is_local_test
             })
         }
+
+def save_to_s3(data, analytics, data_type, output_bucket):
+    """Save results to S3 (only in real AWS environment)"""
+    s3_client = boto3.client('s3')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+    
+    # Save raw data as JSON
+    json_key = f"analytics/{data_type}/raw-data-{timestamp}.json"
+    s3_client.put_object(
+        Bucket=output_bucket,
+        Key=json_key,
+        Body=json.dumps(data, indent=2, default=str),
+        ContentType='application/json'
+    )
+    
+    # Save analytics results
+    analytics_key = f"analytics/{data_type}/results-{timestamp}.json"
+    s3_client.put_object(
+        Bucket=output_bucket,
+        Key=analytics_key,
+        Body=json.dumps(analytics, indent=2, default=str),
+        ContentType='application/json'
+    )
+    
+    logger.info(f"Results saved to S3: {output_bucket}")
+    
+    return {
+        'raw_data': f"s3://{output_bucket}/{json_key}",
+        'analytics': f"s3://{output_bucket}/{analytics_key}"
+    }
 
 def generate_sales_data(count=100):
     """Generate sample sales data using built-in random module"""

@@ -150,16 +150,49 @@ class LambdaAutomation:
             function_arn = response['FunctionArn']
             self.logger.info(f"Deployed function: {function_arn}")
             
+            # Wait a moment for function to initialize
+            self.logger.info("Waiting for function initialization...")
+            time.sleep(10)
+            
             return function_arn
             
         except ClientError as e:
             self.logger.error(f"Failed to deploy Lambda function: {e}")
             raise
     
+    def wait_for_function_active(self, timeout=60):
+        """Wait for Lambda function to be in Active state"""
+        try:
+            self.logger.info("Waiting for Lambda function to be active...")
+            start_time = time.time()
+            
+            while time.time() - start_time < timeout:
+                response = self.lambda_client.get_function(FunctionName=self.function_name)
+                state = response['Configuration']['State']
+                
+                self.logger.info(f"Function state: {state}")
+                
+                if state == 'Active':
+                    self.logger.info("Function is now active!")
+                    return True
+                elif state == 'Failed':
+                    raise Exception(f"Function deployment failed: {response['Configuration'].get('StateReason', 'Unknown error')}")
+                
+                time.sleep(5)
+            
+            raise Exception(f"Function did not become active within {timeout} seconds")
+            
+        except ClientError as e:
+            self.logger.error(f"Failed to check function state: {e}")
+            raise
+
     def test_lambda_function(self):
         """Test Lambda function with different event types"""
         try:
             self.logger.info("Testing Lambda function")
+            
+            # Wait for function to be active before testing
+            self.wait_for_function_active()
             
             # Test 1: Direct invocation
             test_event_1 = {

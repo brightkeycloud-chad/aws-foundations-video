@@ -32,7 +32,7 @@ print_error() {
 
 # Configuration variables
 AWS_REGION="${AWS_REGION:-us-east-1}"
-AVAILABILITY_ZONE="${AVAILABILITY_ZONE:-us-east-1a}"
+AVAILABILITY_ZONE="${AVAILABILITY_ZONE:-us-east-1b}"
 VOLUME_SIZE="${VOLUME_SIZE:-10}"
 VOLUME_TYPE="${VOLUME_TYPE:-gp3}"
 

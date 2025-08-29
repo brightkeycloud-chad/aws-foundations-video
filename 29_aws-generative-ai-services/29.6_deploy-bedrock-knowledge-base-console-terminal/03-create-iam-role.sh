@@ -34,16 +34,22 @@ EOF
 
 echo "✅ Created trust policy file: kb-trust-policy.json"
 
-# Create the role
-echo "Creating BedrockKnowledgeBaseRole..."
-aws iam create-role \
-    --role-name BedrockKnowledgeBaseRole \
-    --assume-role-policy-document file://kb-trust-policy.json
+# Create or update the role
+echo "Creating/updating BedrockKnowledgeBaseRole..."
 
-if [ $? -eq 0 ]; then
-    echo "✅ Successfully created BedrockKnowledgeBaseRole"
+# Check if role exists
+if aws iam get-role --role-name BedrockKnowledgeBaseRole >/dev/null 2>&1; then
+    echo "📝 Role exists, updating trust policy..."
+    aws iam update-assume-role-policy \
+        --role-name BedrockKnowledgeBaseRole \
+        --policy-document file://kb-trust-policy.json
+    echo "✅ Updated trust policy for BedrockKnowledgeBaseRole"
 else
-    echo "⚠️  BedrockKnowledgeBaseRole may already exist"
+    echo "📝 Creating new role..."
+    aws iam create-role \
+        --role-name BedrockKnowledgeBaseRole \
+        --assume-role-policy-document file://kb-trust-policy.json
+    echo "✅ Successfully created BedrockKnowledgeBaseRole"
 fi
 
 # Create custom policy for knowledge base
@@ -83,29 +89,32 @@ EOF
 
 echo "✅ Created permissions policy file: kb-permissions-policy.json"
 
-# Create the policy
-aws iam create-policy \
-    --policy-name BedrockKnowledgeBasePolicy \
-    --policy-document file://kb-permissions-policy.json
+# Create or update the policy
+echo "Creating/updating custom permissions policy..."
 
-if [ $? -eq 0 ]; then
-    echo "✅ Successfully created BedrockKnowledgeBasePolicy"
+# Check if policy exists
+if aws iam get-policy --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/BedrockKnowledgeBasePolicy >/dev/null 2>&1; then
+    echo "📝 Policy exists, creating new version..."
+    aws iam create-policy-version \
+        --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/BedrockKnowledgeBasePolicy \
+        --policy-document file://kb-permissions-policy.json \
+        --set-as-default
+    echo "✅ Updated BedrockKnowledgeBasePolicy with new version"
 else
-    echo "⚠️  BedrockKnowledgeBasePolicy may already exist"
+    echo "📝 Creating new policy..."
+    aws iam create-policy \
+        --policy-name BedrockKnowledgeBasePolicy \
+        --policy-document file://kb-permissions-policy.json
+    echo "✅ Successfully created BedrockKnowledgeBasePolicy"
 fi
 
-# Attach policy to role
+# Attach policy to role (idempotent operation)
 echo "Attaching policy to role..."
 aws iam attach-role-policy \
     --role-name BedrockKnowledgeBaseRole \
     --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/BedrockKnowledgeBasePolicy
 
-if [ $? -eq 0 ]; then
-    echo "✅ Successfully attached policy to BedrockKnowledgeBaseRole"
-else
-    echo "❌ Failed to attach policy to role"
-    exit 1
-fi
+echo "✅ Policy attached to BedrockKnowledgeBaseRole"
 
 # Wait a moment for role to propagate
 echo "Waiting for IAM role to propagate..."

@@ -73,7 +73,7 @@ This 5-minute demonstration shows how to create metric filters from existing AWS
 1. Click **Create metric filter** again
 2. Configure the filter:
    ```
-   Filter pattern: { $.eventName = "ConsoleLogin" && $.responseElements.ConsoleLogin = "Failure" }
+   Filter pattern: { ($.eventName = "ConsoleLogin") && ($.errorMessage = "Failed authentication") }
    ```
 3. **Metric details**:
    - **Metric namespace**: `CloudTrailMetrics`
@@ -89,7 +89,7 @@ This 5-minute demonstration shows how to create metric filters from existing AWS
 1. Click **Create metric filter** again
 2. Configure the filter:
    ```
-   Filter pattern: { $.eventName = Delete* || $.eventName = Terminate* }
+   Filter pattern: { ($.eventName = Delete*) || ($.eventName = Terminate*) }
    ```
 3. **Metric details**:
    - **Metric namespace**: `CloudTrailMetrics`
@@ -140,7 +140,7 @@ fields @timestamp, eventName, sourceIPAddress
 
 # Identify failed login patterns
 fields @timestamp, sourceIPAddress, errorMessage
-| filter eventName = "ConsoleLogin" and responseElements.ConsoleLogin = "Failure"
+| filter eventName = "ConsoleLogin" and errorMessage = "Failed authentication"
 | stats count() by sourceIPAddress
 | sort count desc
 
@@ -154,7 +154,7 @@ fields @timestamp, eventName, userIdentity.userName, sourceIPAddress
 
 ### IAM Policy Changes:
 ```json
-{ $.eventName = PutUserPolicy || $.eventName = PutRolePolicy || $.eventName = PutGroupPolicy || $.eventName = CreateRole || $.eventName = DeleteRole }
+{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName = AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }
 ```
 
 ### High-Risk API Calls:
@@ -177,9 +177,9 @@ fields @timestamp, eventName, userIdentity.userName, sourceIPAddress
 { $.eventSource = "s3.amazonaws.com" && $.eventName = PutBucketPolicy }
 ```
 
-### EC2 Security Group Changes:
+### Security Group Changes:
 ```json
-{ $.eventSource = "ec2.amazonaws.com" && ($.eventName = AuthorizeSecurityGroupIngress || $.eventName = RevokeSecurityGroupIngress) }
+{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }
 ```
 
 ## Common CloudTrail Event Names for Monitoring
@@ -268,13 +268,22 @@ fields @timestamp, eventName, userIdentity.type, sourceIPAddress
 - **Historical data**: Metric filters don't retroactively process existing logs
 - **Log group selection**: Ensure you're creating filters on the correct log group
 
-## Key Learning Points
-- CloudTrail provides rich security and operational data
-- JSON filter patterns enable precise event matching
-- Metric filters transform logs into actionable metrics
-- Dimensions enable detailed analysis and filtering
-- Real-time security monitoring requires proper alerting
-- Historical analysis helps identify patterns and trends
+## Important Notes and Best Practices
+
+### Metric Filter Limitations:
+- **No Retroactive Processing**: Metric filters only capture events that occur after the filter is created
+- **Standard Log Class Only**: Metric filters are supported only for log groups in the Standard log class
+- **Cost Considerations**: Each unique dimension value creates a separate metric, which can result in charges
+
+### Dimension Best Practices:
+- **Avoid High-Cardinality Fields**: Don't use fields like IP addresses or request IDs as dimensions to prevent unexpected charges
+- **AWS May Disable Filters**: Amazon might disable metric filters that generate more than 1000 different dimension name/value pairs over time
+- **Monitor Costs**: Set up billing alarms to monitor custom metric charges
+
+### Filter Pattern Accuracy:
+- **Case Sensitivity**: CloudTrail event names are case-sensitive
+- **JSON Structure**: Verify exact field paths in your specific CloudTrail logs
+- **Test Patterns**: Always test filter patterns with sample data before creating filters
 
 ## Security Benefits
 - **Proactive monitoring**: Detect security issues before they escalate

@@ -1,0 +1,9 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: "codedeploy-lambda-demo"
+        Alias: "live"
+        CurrentVersion: "1"
+        TargetVersion: "2"

@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 FUNCTION_NAME="HealthEventProcessor"
 SNS_TOPIC_NAME="aws-health-alerts"
 RULE_NAME="HealthEventRule"
-EMAIL_ADDRESS=""
+EMAIL_ADDRESS="chad@brightkeycloud.com"
 
 # Function to print colored output
 print_status() {

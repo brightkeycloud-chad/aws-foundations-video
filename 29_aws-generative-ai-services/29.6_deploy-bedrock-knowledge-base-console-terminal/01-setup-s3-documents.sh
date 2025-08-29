@@ -3,17 +3,38 @@
 # Script 1: Create S3 Bucket and Upload Sample Documents
 echo "Setting up S3 bucket and sample documents for Knowledge Base..."
 
-# Create unique bucket name with timestamp
-BUCKET_NAME="bedrock-kb-docs-$(date +%s)"
-echo "Creating S3 bucket: $BUCKET_NAME"
-
-aws s3 mb s3://$BUCKET_NAME --region us-east-1
-
-if [ $? -eq 0 ]; then
-    echo "✅ Created bucket: $BUCKET_NAME"
+# Create or use existing bucket
+if [ -f ".bucket-name" ]; then
+    BUCKET_NAME=$(cat .bucket-name)
+    echo "📝 Using existing bucket: $BUCKET_NAME"
+    
+    # Verify bucket exists
+    if aws s3 ls s3://$BUCKET_NAME >/dev/null 2>&1; then
+        echo "✅ Bucket exists and is accessible"
+    else
+        echo "❌ Bucket in .bucket-name file doesn't exist or isn't accessible"
+        rm .bucket-name
+        BUCKET_NAME="bedrock-kb-docs-$(date +%s)"
+        echo "📝 Creating new bucket: $BUCKET_NAME"
+    fi
 else
-    echo "❌ Failed to create S3 bucket"
-    exit 1
+    BUCKET_NAME="bedrock-kb-docs-$(date +%s)"
+    echo "📝 Creating new bucket: $BUCKET_NAME"
+fi
+
+# Create bucket if needed
+if [ ! -f ".bucket-name" ] || ! aws s3 ls s3://$BUCKET_NAME >/dev/null 2>&1; then
+    aws s3 mb s3://$BUCKET_NAME --region us-east-1
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ Created bucket: $BUCKET_NAME"
+        echo $BUCKET_NAME > .bucket-name
+    else
+        echo "❌ Failed to create S3 bucket"
+        exit 1
+    fi
+else
+    echo "✅ Using existing bucket: $BUCKET_NAME"
 fi
 
 # Create sample document 1

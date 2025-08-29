@@ -1,8 +1,0 @@
-{
-    "test": "data",
-    "source": "cli",
-    "action": "health_check",
-    "data": {
-        "items": ["demo", "test", "lambda"]
-    }
-}

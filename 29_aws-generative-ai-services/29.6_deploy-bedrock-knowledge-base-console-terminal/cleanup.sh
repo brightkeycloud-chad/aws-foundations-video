@@ -28,7 +28,7 @@ fi
 
 # Delete OpenSearch Serverless collection
 echo "Deleting OpenSearch Serverless collection..."
-aws opensearchserverless delete-collection --id bedrock-kb-collection 2>/dev/null
+aws opensearchserverless delete-collection --name bedrock-kb-collection 2>/dev/null
 if [ $? -eq 0 ]; then
     echo "OpenSearch Serverless collection deletion initiated: bedrock-kb-collection"
     echo "Note: Collection deletion may take a few minutes to complete"
@@ -41,6 +41,15 @@ sleep 5
 
 # Delete OpenSearch Serverless policies
 echo "Deleting OpenSearch Serverless policies..."
+
+# Delete IAM Identity Center security configuration
+SECURITY_CONFIG_ID=$(aws opensearchserverless list-security-configs --type iamidentitycenter --query 'securityConfigSummaries[?name==`bedrock-kb-identity-center-config`].id' --output text 2>/dev/null)
+if [ ! -z "$SECURITY_CONFIG_ID" ] && [ "$SECURITY_CONFIG_ID" != "None" ]; then
+    aws opensearchserverless delete-security-config --id $SECURITY_CONFIG_ID 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Deleted IAM Identity Center security configuration: bedrock-kb-identity-center-config"
+    fi
+fi
 
 aws opensearchserverless delete-access-policy --name bedrock-kb-data-access-policy --type data 2>/dev/null
 if [ $? -eq 0 ]; then
@@ -116,6 +125,7 @@ rm -f data-access-policy.json
 rm -f kb-trust-policy.json
 rm -f kb-permissions-policy.json
 rm -f .bucket-name
+rm -f data-access-policy-identity-center.json
 rm -f .collection-endpoint
 rm -f kb-response-*.json
 rm -f test_knowledge_base.py

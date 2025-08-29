@@ -3,7 +3,7 @@
 # Test script for sending messages to SQS queue
 # Usage: ./send_test_messages.sh [queue-name] [region]
 
-QUEUE_NAME=${1:-"demo-lambda-trigger-queue"}
+QUEUE_NAME=${1:-"demo-sqs"}
 REGION=${2:-"us-east-1"}
 
 echo "Getting queue URL for: $QUEUE_NAME in region: $REGION"

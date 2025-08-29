@@ -52,16 +52,28 @@ sleep 10
 echo "2. Creating Lambda function..."
 aws lambda create-function \
     --function-name "$FUNCTION_NAME" \
-    --runtime python3.9 \
+    --runtime python3.12 \
     --role "$ROLE_ARN" \
     --handler simple_lambda.lambda_handler \
     --zip-file fileb://function.zip \
     --description "CLI deployed demo function"
 
-echo "3. Testing Lambda function..."
+echo "3. Creating test payload..."
+cat > test-payload.json << 'EOF'
+{
+    "test": "data",
+    "source": "cli",
+    "action": "health_check",
+    "data": {
+        "items": ["demo", "test", "lambda"]
+    }
+}
+EOF
+
+echo "Testing Lambda function..."
 aws lambda invoke \
     --function-name "$FUNCTION_NAME" \
-    --payload file://test-payload.json \
+    --payload fileb://test-payload.json \
     response.json
 
 echo "Response:"
@@ -85,7 +97,7 @@ cleanup() {
     aws lambda delete-function --function-name "$FUNCTION_NAME" 2>/dev/null || true
     aws iam detach-role-policy --role-name "$ROLE_NAME" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 2>/dev/null || true
     aws iam delete-role --role-name "$ROLE_NAME" 2>/dev/null || true
-    rm -f simple_lambda.py function.zip response.json
+    rm -f simple_lambda.py function.zip response.json test-payload.json
     echo "Cleanup completed!"
 }
 

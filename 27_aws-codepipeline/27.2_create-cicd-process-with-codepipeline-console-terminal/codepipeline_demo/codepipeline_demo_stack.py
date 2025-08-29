@@ -1,11 +1,9 @@
 from aws_cdk import (
     Stack,
-    Duration,
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
     aws_codebuild as codebuild,
     aws_s3 as s3,
-    aws_iam as iam,
     RemovalPolicy,
     CfnOutput,
 )
@@ -18,22 +16,23 @@ class CodepipelineDemoStack(Stack):
         # Create S3 bucket for artifacts
         artifact_bucket = s3.Bucket(
             self, "PipelineArtifacts",
-            bucket_name=f"codepipeline-artifacts-{self.account}-{self.region}",
             removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True,
-            versioned=True,
-            encryption=s3.BucketEncryption.S3_MANAGED
+            auto_delete_objects=True
+        )
+
+        # Create S3 bucket for source code
+        source_bucket = s3.Bucket(
+            self, "SourceBucket",
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True
         )
 
         # Create CodeBuild project
         build_project = codebuild.Project(
             self, "BuildProject",
-            project_name="demo-build-project",
-            description="Demo build project for CodePipeline",
             environment=codebuild.BuildEnvironment(
                 build_image=codebuild.LinuxBuildImage.STANDARD_5_0,
-                compute_type=codebuild.ComputeType.SMALL,
-                privileged=False
+                compute_type=codebuild.ComputeType.SMALL
             ),
             build_spec=codebuild.BuildSpec.from_object({
                 "version": "0.2",
@@ -41,72 +40,49 @@ class CodepipelineDemoStack(Stack):
                     "install": {
                         "runtime-versions": {
                             "nodejs": "14"
-                        },
-                        "commands": [
-                            "echo Installing dependencies..."
-                        ]
+                        }
                     },
                     "pre_build": {
                         "commands": [
-                            "echo Pre-build phase started on `date`",
-                            "echo Installing application dependencies...",
-                            "# npm install  # Uncomment if you have a package.json"
+                            "echo Build started on `date`"
                         ]
                     },
                     "build": {
                         "commands": [
-                            "echo Build started on `date`",
-                            "echo Creating a simple HTML file for demo...",
-                            "mkdir -p dist",
-                            "echo '<html><head><title>Demo App</title></head><body><h1>Hello from CodePipeline!</h1><p>Build completed at: '$(date)'</p></body></html>' > dist/index.html",
-                            "echo Build completed successfully"
+                            "echo Building the application",
+                            "ls -la"
                         ]
                     },
                     "post_build": {
                         "commands": [
-                            "echo Post-build phase completed on `date`"
+                            "echo Build completed on `date`"
                         ]
                     }
                 },
                 "artifacts": {
                     "files": [
                         "**/*"
-                    ],
-                    "base-directory": "dist"
+                    ]
                 }
-            }),
-            timeout=Duration.minutes(10)
+            })
         )
 
         # Create pipeline
         pipeline = codepipeline.Pipeline(
             self, "DemoPipeline",
-            pipeline_name="demo-cicd-pipeline",
-            artifact_bucket=artifact_bucket,
-            cross_account_keys=False,  # Disable for cost optimization in demo
-            restart_execution_on_update=True
+            artifact_bucket=artifact_bucket
         )
 
         # Define artifacts
         source_output = codepipeline.Artifact("SourceOutput")
         build_output = codepipeline.Artifact("BuildOutput")
 
-        # Source stage - Using S3 source for simplicity in demo
-        # In real scenarios, you would use GitHub, CodeCommit, etc.
-        source_bucket = s3.Bucket(
-            self, "SourceBucket",
-            bucket_name=f"demo-source-{self.account}-{self.region}",
-            removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True,
-            versioned=True
-        )
-
+        # Source stage - S3 source
         source_action = codepipeline_actions.S3SourceAction(
             action_name="S3_Source",
             bucket=source_bucket,
             bucket_key="source.zip",
-            output=source_output,
-            trigger=codepipeline_actions.S3Trigger.POLL  # Check for changes
+            output=source_output
         )
 
         pipeline.add_stage(
@@ -127,28 +103,21 @@ class CodepipelineDemoStack(Stack):
             actions=[build_action]
         )
 
-        # Deploy stage - Deploy to S3 static website
+        # Deploy stage - S3 static website hosting
         deploy_bucket = s3.Bucket(
             self, "DeployBucket",
-            bucket_name=f"demo-deploy-{self.account}-{self.region}",
             website_index_document="index.html",
             website_error_document="error.html",
             public_read_access=True,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ACLS,
             removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True,
-            block_public_access=s3.BlockPublicAccess(
-                block_public_acls=False,
-                block_public_policy=False,
-                ignore_public_acls=False,
-                restrict_public_buckets=False
-            )
+            auto_delete_objects=True
         )
 
         deploy_action = codepipeline_actions.S3DeployAction(
             action_name="S3Deploy",
             bucket=deploy_bucket,
-            input=build_output,
-            extract=True  # Extract the build artifacts
+            input=build_output
         )
 
         pipeline.add_stage(
@@ -156,27 +125,16 @@ class CodepipelineDemoStack(Stack):
             actions=[deploy_action]
         )
 
-        # Outputs for easy reference
-        CfnOutput(
-            self, "PipelineName",
-            value=pipeline.pipeline_name,
-            description="Name of the CodePipeline"
-        )
-
-        CfnOutput(
-            self, "SourceBucketName",
-            value=source_bucket.bucket_name,
-            description="S3 bucket for source code (upload source.zip here)"
-        )
-
+        # Output the website URL
         CfnOutput(
             self, "WebsiteURL",
             value=deploy_bucket.bucket_website_url,
             description="URL of the deployed website"
         )
 
+        # Output the source bucket name for the deploy script
         CfnOutput(
-            self, "ArtifactBucketName",
-            value=artifact_bucket.bucket_name,
-            description="S3 bucket for pipeline artifacts"
+            self, "SourceBucketName",
+            value=source_bucket.bucket_name,
+            description="Name of the source S3 bucket"
         )

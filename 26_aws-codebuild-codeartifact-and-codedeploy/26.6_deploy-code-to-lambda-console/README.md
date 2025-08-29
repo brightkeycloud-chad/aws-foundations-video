@@ -1,184 +1,98 @@
-# Deploy Code to AWS Lambda Console - 5-Minute Demonstration
+# AWS CodeDeploy Lambda Demo
 
-## Overview
-This demonstration shows how to create, deploy, and test a Lambda function using the AWS Console. The demonstration takes approximately 5 minutes and covers the complete workflow from function creation to testing and cleanup.
+A 5-minute demonstration of using AWS CodeDeploy to deploy updates to a Lambda function.
 
 ## Prerequisites
-- AWS Account with appropriate permissions
-- Access to AWS Management Console
-- Basic understanding of JSON format
 
-## Demonstration Steps
+- AWS CLI configured with appropriate permissions
+- Terraform installed
+- jq installed (for JSON processing)
 
-### Step 1: Access Lambda Console (30 seconds)
-1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/)
-2. Navigate to the [Lambda Functions page](https://console.aws.amazon.com/lambda/home#/functions)
-3. Click **Create function**
+## Demo Structure
 
-### Step 2: Create Lambda Function (1 minute)
-1. Select **Author from scratch**
-2. Configure basic information:
-   - **Function name**: `myLambdaFunction`
-   - **Runtime**: Choose **Python 3.13** or **Node.js 22**
-   - **Architecture**: Leave as **x86_64**
-3. Click **Create function**
-
-*Note: Lambda automatically creates an execution role with basic CloudWatch Logs permissions*
-
-### Step 3: Deploy Function Code (2 minutes)
-
-#### For Python Runtime:
-1. Click the **Code** tab
-2. Select **lambda_function.py** in the file explorer
-3. Replace the default code with:
-
-```python
-import json
-import logging
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-def lambda_handler(event, context):
-    
-    # Get the length and width parameters from the event object
-    length = event['length']
-    width = event['width']
-    
-    area = calculate_area(length, width)
-    print(f"The area is {area}")
-        
-    logger.info(f"CloudWatch logs group: {context.log_group_name}")
-    
-    # return the calculated area as a JSON string
-    data = {"area": area}
-    return json.dumps(data)
-    
-def calculate_area(length, width):
-    return length*width
+```
+.
+├── README.md                 # This file
+├── terraform/               # Initial Lambda deployment
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+├── lambda-code/             # Lambda function code
+│   ├── v1/
+│   │   └── index.js        # Initial version
+│   └── v2/
+│       └── index.js        # Updated version
+├── scripts/                 # Automation scripts
+│   ├── deploy.sh           # Initial deployment
+│   ├── update.sh           # CodeDeploy update
+│   └── cleanup.sh          # Cleanup resources
+└── codedeploy/             # CodeDeploy configuration
+    └── appspec.yml         # Application specification
 ```
 
-#### For Node.js Runtime:
-1. Click the **Code** tab
-2. Select **index.mjs** in the file explorer
-3. Replace the default code with:
+## Quick Start (5-minute demo)
 
-```javascript
-export const handler = async (event, context) => {
-  
-  const length = event.length;
-  const width = event.width;
-  let area = calculateArea(length, width);
-  console.log(`The area is ${area}`);
-        
-  console.log('CloudWatch log group: ', context.logGroupName);
-  
-  let data = {
-    "area": area,
-  };
-    return JSON.stringify(data);
-    
-  function calculateArea(length, width) {
-    return length * width;
-  }
-};
-```
-
-4. Click **Deploy** to update the function code
-
-### Step 4: Create and Run Test Event (1 minute)
-1. In the **TEST EVENTS** section, click **Create test event**
-2. Configure the test event:
-   - **Event Name**: `myTestEvent`
-   - **Event JSON**: Replace default JSON with:
-   ```json
-   {
-     "length": 6,
-     "width": 7
-   }
+1. **Initial Setup** (1 minute)
+   ```bash
+   ./scripts/deploy.sh
    ```
-3. Click **Save**
-4. Click the **Run** icon next to your test event
 
-### Step 5: Review Results (30 seconds)
-1. Check the **OUTPUT** tab for:
-   - **Status**: Should show "Succeeded"
-   - **Response**: Should show `{"area":42}`
-   - **Function Logs**: Should display calculated area and CloudWatch log group name
+2. **Test Initial Function** (1 minute)
+   ```bash
+   aws lambda invoke --function-name codedeploy-lambda-demo response.json
+   cat response.json
+   ```
 
-Expected output format:
-```
-Status: Succeeded
-Test Event Name: myTestEvent
+3. **Deploy Update via CodeDeploy** (2 minutes)
+   ```bash
+   ./scripts/update.sh
+   ```
 
-Response
-"{\"area\":42}"
+4. **Verify Update** (30 seconds)
+   ```bash
+   aws lambda invoke --function-name codedeploy-lambda-demo:live response.json
+   cat response.json
+   ```
 
-Function Logs
-START RequestId: [request-id] Version: $LATEST
-The area is 42
-[INFO] CloudWatch logs group: /aws/lambda/myLambdaFunction
-END RequestId: [request-id]
-REPORT RequestId: [request-id] Duration: [time] ms...
-```
+5. **Cleanup** (30 seconds)
+   ```bash
+   ./scripts/cleanup.sh
+   ```
 
-### Step 6: View CloudWatch Logs (Optional - 30 seconds)
-1. Open [CloudWatch Log groups](https://console.aws.amazon.com/cloudwatch/home#logs:)
-2. Click on `/aws/lambda/myLambdaFunction`
-3. Select the most recent log stream to view detailed execution logs
+## What This Demo Shows
 
-### Step 7: Cleanup (30 seconds)
-1. Return to [Lambda Functions page](https://console.aws.amazon.com/lambda/home#/functions)
-2. Select your function
-3. Click **Actions** → **Delete**
-4. Type `confirm` and click **Delete**
+- Initial Lambda function deployment with Terraform
+- CodeDeploy application and deployment group setup
+- Automated deployment of Lambda function updates via CodeDeploy
+- Blue/green deployment strategy for Lambda
+- Rollback capabilities with CodeDeploy
 
-## Key Learning Points
+## Key AWS Services Used
 
-### Lambda Handler Function
-- **Python**: `lambda_handler(event, context)` is the entry point
-- **Node.js**: `handler` function is the entry point
-- The handler name must match the runtime configuration
+- AWS Lambda (functions, versions, aliases)
+- AWS CodeDeploy (applications, deployment groups)
+- AWS IAM (roles and policies)
+- AWS S3 (for deployment artifacts)
 
-### Event Object
-- Contains input data for your function
-- In this demo: JSON with `length` and `width` properties
-- Lambda converts JSON to native objects (dict in Python, object in Node.js)
+## Demo Flow
 
-### Context Object
-- Provides runtime information about the function execution
-- Includes log group name, request ID, and other metadata
-- Used for monitoring and debugging purposes
+1. Terraform creates the initial Lambda function (v1) with "Hello World" response
+2. CodeDeploy application and deployment group are configured
+3. Updated Lambda code (v2) is packaged and deployed via CodeDeploy
+4. CodeDeploy performs blue/green deployment with automatic rollback capability
+5. Function now returns "Hello from CodeDeploy!" response via the alias
 
-### Logging
-- **Python**: Use `print()` statements or logging library
-- **Node.js**: Use `console.log()` methods
-- All logs are automatically sent to CloudWatch Logs
+## Key Concepts Demonstrated
 
-## Troubleshooting
+- **AWS CodeDeploy**: Automated deployment service for Lambda functions
+- **Blue/Green Deployments**: CodeDeploy manages traffic shifting between versions
+- **AppSpec Configuration**: Defines deployment behavior and target versions
+- **Rollback Capability**: Automatic rollback on deployment failures
+- **Zero Downtime**: CodeDeploy ensures no service interruption
 
-### Common Issues:
-1. **Function fails to run**: Check that handler name matches the function name
-2. **Missing event properties**: Ensure test event JSON includes required `length` and `width` fields
-3. **Permission errors**: Verify your AWS account has Lambda execution permissions
+## Notes
 
-### Error Messages:
-- `"errorType": "KeyError"` (Python) or `TypeError` (Node.js): Missing required event properties
-- `"errorType": "Runtime.HandlerNotFound"`: Handler function name mismatch
-
-## Additional Resources
-
-### AWS Documentation References:
-- [Create your first Lambda function](https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html) - Complete getting started guide
-- [Testing Lambda functions in the console](https://docs.aws.amazon.com/lambda/latest/dg/testing-functions.html) - Detailed testing procedures
-- [Define Lambda function handler in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html) - Python-specific handler documentation
-- [Define Lambda function handler in Node.js](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html) - Node.js-specific handler documentation
-
-### Next Steps:
-- Learn about [Lambda deployment packages](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html)
-- Explore [Lambda triggers with other AWS services](https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example.html)
-- Understand [Lambda execution roles and permissions](https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html)
-
----
-
-*This demonstration is based on AWS Lambda documentation current as of August 2025. For the most up-to-date information, always refer to the official AWS documentation.*
+- The demo uses a simple Node.js Lambda function
+- CodeDeploy uses "AllAtOnce" deployment configuration for speed
+- All resources are tagged for easy identification and cleanup
+- S3 bucket stores deployment artifacts with versioning enabled

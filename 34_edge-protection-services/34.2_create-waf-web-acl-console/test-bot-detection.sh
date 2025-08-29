@@ -24,36 +24,55 @@ echo "🎯 Target URL: $TARGET_URL"
 echo "⚠️  WARNING: Only test against your own resources!"
 echo ""
 
-# Function to make a request and show results
+# Function to make multiple requests and show results
 make_request() {
     local description="$1"
     local user_agent="$2"
     local additional_headers="$3"
+    local count=100
     
-    echo "📡 Testing: $description"
+    echo "📡 Testing: $description (${count} requests)"
     echo "   User-Agent: $user_agent"
     
-    # Make the request and capture response
-    response=$(curl -s -w "\nHTTP_CODE:%{http_code}\nCONTENT_TYPE:%{content_type}\n" \
-        -H "User-Agent: $user_agent" \
-        $additional_headers \
-        "$TARGET_URL" 2>/dev/null || echo "REQUEST_FAILED")
+    local success_count=0
+    local blocked_count=0
+    local failed_count=0
+    local other_count=0
     
-    # Extract HTTP code
-    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    for i in $(seq 1 $count); do
+        # Make the request and capture response
+        response=$(curl -s -w "\nHTTP_CODE:%{http_code}\nCONTENT_TYPE:%{content_type}\n" \
+            -H "User-Agent: $user_agent" \
+            $additional_headers \
+            "$TARGET_URL" 2>/dev/null || echo "REQUEST_FAILED")
+        
+        # Extract HTTP code
+        http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+        
+        if [ "$http_code" = "403" ]; then
+            ((blocked_count++))
+        elif [ "$http_code" = "200" ]; then
+            ((success_count++))
+        elif [ -z "$http_code" ] || [ "$response" = "REQUEST_FAILED" ]; then
+            ((failed_count++))
+        else
+            ((other_count++))
+        fi
+        
+        # Show progress every 25 requests
+        if [ $((i % 25)) -eq 0 ]; then
+            echo "   Progress: $i/$count requests completed"
+        fi
+    done
     
-    if [ "$http_code" = "403" ]; then
-        echo "   ✅ Result: BLOCKED (HTTP 403) - Bot Control likely detected this request"
-    elif [ "$http_code" = "200" ]; then
-        echo "   ✅ Result: ALLOWED (HTTP 200) - Request passed through"
-    elif [ -z "$http_code" ] || [ "$response" = "REQUEST_FAILED" ]; then
-        echo "   ❌ Result: REQUEST FAILED - Check URL and network connectivity"
-    else
-        echo "   ℹ️  Result: HTTP $http_code - Unexpected response"
-    fi
+    echo "   ✅ Results Summary:"
+    echo "      - ALLOWED (200): $success_count requests"
+    echo "      - BLOCKED (403): $blocked_count requests"
+    echo "      - FAILED: $failed_count requests"
+    echo "      - OTHER: $other_count requests"
     
     echo ""
-    sleep 2
+    sleep 1
 }
 
 echo "🧪 Running bot detection tests..."

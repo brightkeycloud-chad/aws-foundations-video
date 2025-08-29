@@ -4,7 +4,7 @@
 # Usage: ./test_sns_publishing.sh [topic-name] [region]
 
 TOPIC_NAME=${1:-"demo-notifications-topic"}
-REGION=${2:-"us-west-2"}
+REGION=${2:-"us-east-1"}
 
 echo "Finding SNS topic: $TOPIC_NAME in region: $REGION"
 

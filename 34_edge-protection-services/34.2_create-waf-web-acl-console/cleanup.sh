@@ -16,23 +16,22 @@ WEB_ACL_NAME="demo-web-acl"
 
 echo "📋 Looking for Web ACL: $WEB_ACL_NAME"
 
-# Get the Web ACL ID and scope
-WEB_ACL_INFO=$(aws wafv2 list-web-acls --scope CLOUDFRONT --query "WebACLs[?Name=='$WEB_ACL_NAME'].[Id,LockToken]" --output text 2>/dev/null || echo "")
+# Get the Web ACL ID
+WEB_ACL_ID=$(aws wafv2 list-web-acls --scope CLOUDFRONT --query "WebACLs[?Name=='$WEB_ACL_NAME'].Id" --output text 2>/dev/null || echo "")
 
-if [ -z "$WEB_ACL_INFO" ]; then
+if [ -z "$WEB_ACL_ID" ] || [ "$WEB_ACL_ID" = "None" ]; then
     echo "ℹ️  No Web ACL found with name '$WEB_ACL_NAME'. Nothing to clean up."
     exit 0
 fi
 
-# Extract ID and LockToken
-WEB_ACL_ID=$(echo $WEB_ACL_INFO | cut -d$'\t' -f1)
-LOCK_TOKEN=$(echo $WEB_ACL_INFO | cut -d$'\t' -f2)
-
 echo "🔍 Found Web ACL ID: $WEB_ACL_ID"
+
+# Get the lock token
+LOCK_TOKEN=$(aws wafv2 get-web-acl --scope CLOUDFRONT --id "$WEB_ACL_ID" --name "$WEB_ACL_NAME" --query "LockToken" --output text)
 
 # Get Web ACL details to show what's being deleted
 echo "📊 Retrieving Web ACL configuration..."
-WEB_ACL_DETAILS=$(aws wafv2 get-web-acl --scope CLOUDFRONT --id "$WEB_ACL_ID" --query "WebACL" 2>/dev/null || echo "")
+WEB_ACL_DETAILS=$(aws wafv2 get-web-acl --scope CLOUDFRONT --id "$WEB_ACL_ID" --name "$WEB_ACL_NAME" --query "WebACL" 2>/dev/null || echo "")
 
 if [ ! -z "$WEB_ACL_DETAILS" ]; then
     echo "📋 Web ACL contains the following rules:"
@@ -47,7 +46,8 @@ fi
 
 # Check if Web ACL is associated with any resources
 echo "🔗 Checking for associated resources..."
-ASSOCIATED_RESOURCES=$(aws wafv2 list-resources-for-web-acl --web-acl-arn "arn:aws:wafv2:us-east-1:$(aws sts get-caller-identity --query Account --output text):webacl/$WEB_ACL_ID" --resource-type CLOUDFRONT --query "ResourceArns" --output text 2>/dev/null || echo "")
+WEB_ACL_ARN="arn:aws:wafv2:us-east-1:$(aws sts get-caller-identity --query Account --output text):global/webacl/$WEB_ACL_NAME/$WEB_ACL_ID"
+ASSOCIATED_RESOURCES=$(aws wafv2 list-resources-for-web-acl --web-acl-arn "$WEB_ACL_ARN" --resource-type CLOUDFRONT --query "ResourceArns" --output text 2>/dev/null || echo "")
 
 if [ ! -z "$ASSOCIATED_RESOURCES" ] && [ "$ASSOCIATED_RESOURCES" != "None" ]; then
     echo "⚠️  Warning: Web ACL is still associated with resources:"
@@ -63,6 +63,7 @@ echo "💡 This will remove all associated rules including Bot Control..."
 aws wafv2 delete-web-acl \
     --scope CLOUDFRONT \
     --id "$WEB_ACL_ID" \
+    --name "$WEB_ACL_NAME" \
     --lock-token "$LOCK_TOKEN"
 
 echo "✅ Successfully deleted Web ACL: $WEB_ACL_NAME"

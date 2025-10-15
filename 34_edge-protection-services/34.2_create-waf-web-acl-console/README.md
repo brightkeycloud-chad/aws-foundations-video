@@ -1,16 +1,69 @@
-# Demo 34.2: Create WAF Web ACL using AWS Console
+# Demo 34.2: Create WAF Web ACL using AWS Console or CLI
 
 ## Overview
-This 5-minute demonstration shows how to create an AWS WAF (Web Application Firewall) Web ACL using the AWS Management Console. You'll learn to configure basic security rules including bot protection to protect web applications from common threats.
+This demonstration shows how to create an AWS WAF (Web Application Firewall) Web ACL using either the AWS Management Console or AWS CLI automation. You'll learn to configure basic security rules including bot protection to protect web applications from common threats.
 
-**Note**: AWS has introduced a new console experience with "Protection Packs" as the recommended approach. This demo covers the traditional Web ACL creation method, which remains fully supported.
+**Note**: AWS has introduced a new console experience with "Protection Packs" as the recommended approach. This demo covers both the traditional Web ACL creation method and automated CLI approach, both of which remain fully supported.
 
 ## Prerequisites
 - AWS account with appropriate permissions for AWS WAF
-- Access to AWS Management Console
+- AWS CLI configured with appropriate credentials
+- Access to AWS Management Console (for manual approach)
 - Basic understanding of web security concepts
 
-## Demonstration Steps (5 minutes)
+## Quick Start (Automated Setup)
+
+For a quick automated setup, run the provided script:
+
+```bash
+./setup.sh
+```
+
+This script creates a WAF Web ACL named `demo-web-acl` with the following managed rule groups:
+- AWS Core Rule Set (Priority 1)
+- AWS Known Bad Inputs (Priority 2) 
+- AWS Bot Control (Priority 3)
+
+The Web ACL will be created in the `us-east-1` region with `CLOUDFRONT` scope and configured with a default `Allow` action.
+
+## Demonstration Options
+
+You can complete this demonstration using either:
+
+1. **Automated CLI Approach** (Recommended for quick setup): Use the provided `setup.sh` script
+2. **Manual Console Approach** (Educational): Follow the step-by-step console instructions below
+
+### Option 1: Automated CLI Setup (2 minutes)
+
+The automated approach creates the same Web ACL configuration using AWS CLI:
+
+```bash
+./setup.sh
+```
+
+**What the script creates:**
+- Web ACL named `demo-web-acl` in `us-east-1` region
+- Scope: `CLOUDFRONT` (for global edge protection)
+- Default action: `Allow` (allows traffic that doesn't match any rules)
+- Three managed rule groups with proper priorities:
+  - **AWS Core Rule Set** (Priority 1) - Protects against OWASP Top 10 vulnerabilities
+  - **AWS Known Bad Inputs** (Priority 2) - Blocks known malicious request patterns
+  - **AWS Bot Control** (Priority 3) - Intelligent bot detection and management
+
+**Script output example:**
+```
+✅ WAF Web ACL created successfully!
+Web ACL ARN: arn:aws:wafv2:us-east-1:123456789012:global/webacl/demo-web-acl/abc123...
+Web ACL Name: demo-web-acl
+Region: us-east-1
+
+The Web ACL includes the following managed rule groups:
+  - AWS Core Rule Set (Priority 1)
+  - AWS Known Bad Inputs (Priority 2)
+  - AWS Bot Control (Priority 3)
+```
+
+### Option 2: Manual Console Approach (5 minutes)
 
 ### Step 1: Navigate to AWS WAF Console (30 seconds)
 1. Sign in to the AWS Management Console
@@ -69,6 +122,35 @@ This 5-minute demonstration shows how to create an AWS WAF (Web Application Fire
 2. Click **Create web ACL**
 3. Wait for creation to complete (usually 30-60 seconds)
 4. Note the Web ACL ARN for future reference
+
+## Script Technical Details
+
+### Setup Script (`setup.sh`)
+The automated setup script uses the AWS CLI `wafv2 create-web-acl` command with the following configuration:
+
+- **Scope**: `CLOUDFRONT` (required for global edge protection)
+- **Region**: `us-east-1` (required for CloudFront WAF resources)
+- **Default Action**: `Allow` (permits traffic that doesn't match any rules)
+- **Managed Rule Groups**: Three AWS-managed rule groups with specific priorities
+
+### Verification
+After running the setup script, you can verify the Web ACL creation:
+
+```bash
+# List all Web ACLs
+aws wafv2 list-web-acls --scope CLOUDFRONT --region us-east-1
+
+# Get detailed Web ACL information
+aws wafv2 get-web-acl --scope CLOUDFRONT --name demo-web-acl --id <web-acl-id> --region us-east-1
+```
+
+### Capacity Usage
+The created Web ACL uses approximately 950 Web ACL Capacity Units (WCUs):
+- Core Rule Set: ~700 WCUs
+- Known Bad Inputs: ~200 WCUs  
+- Bot Control: ~50 WCUs
+
+This is well within the default limit of 1,500 WCUs per Web ACL.
 
 ## Understanding Bot Protection in AWS WAF
 
@@ -136,6 +218,13 @@ Run the cleanup script to remove resources created during this demonstration:
 ```bash
 ./cleanup.sh
 ```
+
+The cleanup script will:
+- Locate the `demo-web-acl` Web ACL
+- Display the configured rules (including Bot Control)
+- Check for associated CloudFront distributions
+- Safely delete the Web ACL and all its rules
+- Verify successful deletion
 
 ## Optional: Testing Bot Detection
 After associating the Web ACL with a CloudFront distribution (Demo 34.3), you can test bot detection:

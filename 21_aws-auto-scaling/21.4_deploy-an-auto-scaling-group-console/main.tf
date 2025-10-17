@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -80,6 +80,7 @@ resource "aws_security_group" "alb_sg" {
     Name        = "asg-demo-alb-sg"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -111,6 +112,7 @@ resource "aws_security_group" "ec2_sg" {
     Name        = "asg-demo-ec2-sg"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -135,6 +137,7 @@ resource "aws_iam_role" "ec2_ssm_role" {
     Name        = "ASG-Demo-EC2-SSM-Role"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -153,6 +156,7 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
     Name        = "ASG-Demo-EC2-SSM-Profile"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -211,6 +215,7 @@ resource "aws_launch_template" "asg_demo_template" {
       Name        = "ASG-Demo-Instance"
       Purpose     = "Auto-Scaling-Group-Demo"
       Environment = "Training"
+      costcenter  = "demo"
     }
   }
 
@@ -220,6 +225,7 @@ resource "aws_launch_template" "asg_demo_template" {
       Name        = "ASG-Demo-Volume"
       Purpose     = "Auto-Scaling-Group-Demo"
       Environment = "Training"
+      costcenter  = "demo"
     }
   }
 
@@ -227,6 +233,7 @@ resource "aws_launch_template" "asg_demo_template" {
     Name        = "asg-demo-launch-template"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -244,6 +251,7 @@ resource "aws_lb" "asg_demo_alb" {
     Name        = "asg-demo-alb"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -271,6 +279,7 @@ resource "aws_lb_target_group" "asg_demo_tg" {
     Name        = "asg-demo-tg"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
 
@@ -289,5 +298,6 @@ resource "aws_lb_listener" "asg_demo_listener" {
     Name        = "asg-demo-listener"
     Purpose     = "Auto-Scaling-Group-Demo"
     Environment = "Training"
+    costcenter  = "demo"
   }
 }
